@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lawyer Workbench
 
-## Getting Started
+AI-native legal workbench for Middle East lawyers — starting with Egypt.
 
-First, run the development server:
+## Current status
+
+Foundation complete through **Documents + Document AI**, **legal corpus retrieval**, **web research**, and **Phase 4 AI Legal Agents** (orchestrator + specialized agents with tool permissions and human approval).
+
+## Quick start
 
 ```bash
+# 1. Start Postgres (pgvector image; host port 55432)
+docker compose up -d
+
+# 2. Configure env
+cp .env.example .env
+# set BETTER_AUTH_SECRET (openssl rand -base64 32)
+
+# 3. Apply migrations
+npm run db:migrate
+
+# 4. Run the app
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start Next.js |
+| `npm test` | Run auth/authorization/security tests |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript check |
+| `npm run db:generate` | Generate Drizzle migrations |
+| `npm run db:migrate` | Apply migrations |
 
-## Learn More
+## Auth API
 
-To learn more about Next.js, take a look at the following resources:
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+- `GET|POST /api/auth/verify-email`
+- `POST /api/auth/resend-verification`
+- `POST /api/auth/change-password`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Roles: `LAWYER`, `CLIENT`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Password rules: min 8 chars, upper, lower, number, special character.
 
-## Deploy on Vercel
+Email: default `EMAIL_PROVIDER=console` logs messages locally. Set `EMAIL_PROVIDER=resend` + `RESEND_API_KEY` for real delivery.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Documents: upload PDF/images or multi-page photos inside a Matter. Default `DOCUMENT_AI_PROVIDER=mock` for local OCR; set `google` + GCP processor env vars for Document AI.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## AI Agents API
+
+- `POST /api/agents/run` — start an orchestrated (or direct) agent run for a matter
+- `GET /api/agents/runs/:runId` — run status, steps, result (no chain-of-thought)
+- `GET /api/matters/:matterId/agents` — list runs + pending approvals
+- `GET|POST /api/agents/approvals/:approvalId` — review / approve / edit / reject
+
+Agents: Research, Document, Drafting, Review — coordinated by an Orchestrator with:
+- structured AI planner + deterministic fallback
+- dynamic allowlisted tool-calling control loop
+- Matter RAG (pgvector hybrid retrieval, separate from legal corpus)
+- server-side plan/tool permissions and human approval for drafts
+
+```bash
+# Live agent QA script (uses mock providers)
+NODE_ENV=test LLM_PROVIDER=mock LEGAL_EMBEDDING_PROVIDER=mock WEB_SEARCH_PROVIDER=mock \
+  npx tsx scripts/browser-qa-agents.ts
+```
+
+## Documentation
+
+See [`docs/00-index.md`](docs/00-index.md) for product architecture and Phase 1 plan.

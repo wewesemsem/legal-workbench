@@ -1,0 +1,28 @@
+{
+  "source_id": "src_egypt_elp",
+  "source_name": "Egyptian Official Legislation",
+  "source_type": "OFFICIAL",
+  "authority_status": "AUTHORITATIVE_SOURCE",
+  "acquisition_method": "AUTHORIZED_MANUAL_IMPORT",
+  "acquisition_note": "Administrator-supplied sample used only for import-path verification in development. Replace with a legitimately obtained official file before production use.",
+  "country": "EG",
+  "jurisdiction": "Egypt",
+  "source_url": "https://elpai.idsc.gov.eg/",
+  "issuing_authority": "Arab Republic of Egypt",
+  "documents": [
+    {
+      "file": "./sample-law-ar.txt",
+      "title": "قانون رقم 99 لسنة 2024 بشأن تنظيم عينة الاستيراد المعتمد",
+      "document_number": "99",
+      "year": 2024,
+      "document_type": "LAW",
+      "language": "ar",
+      "issuing_authority": "Arab Republic of Egypt",
+      "publication_date": null,
+      "effective_date": null,
+      "content_type": "SOURCE_TEXT",
+      "source_url": "https://elpai.idsc.gov.eg/",
+      "external_id": "approved-import-sample-law-99-2024"
+    }
+  ]
+}
