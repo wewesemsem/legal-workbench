@@ -41,6 +41,10 @@ import {
   resolveConversationContext,
   type ConversationMessage,
 } from "@/modules/legal-retrieval/conversation-context";
+import { getRequestLocale } from "@/modules/i18n/server";
+import {
+  isArabicOutputLanguage,
+} from "@/modules/agents/prompts";
 
 export type StartAgentRunInput = {
   matterId: string;
@@ -113,6 +117,23 @@ async function buildContext(input: {
     context: input.context,
   });
 
+  let uiLocale = "en";
+  try {
+    uiLocale = await getRequestLocale();
+  } catch {
+    uiLocale = "en";
+  }
+  const resolvedInstructions = {
+    ...memoryBundle.resolvedInstructions,
+    language:
+      memoryBundle.resolvedInstructions.language ||
+      (uiLocale === "ar"
+        ? "ar"
+        : uiLocale === "fr"
+          ? "fr"
+          : "en"),
+  };
+
   return {
     runId: input.runId,
     user: input.context,
@@ -141,7 +162,7 @@ async function buildContext(input: {
         value: item.value,
         sourceType: item.sourceType,
       })),
-      resolvedInstructions: memoryBundle.resolvedInstructions,
+      resolvedInstructions,
       conflictCount: memoryBundle.conflicts.length,
     },
     task: input.task,
@@ -364,13 +385,19 @@ export class OrchestratorService {
       });
     }
 
+    const arabicUi = isArabicOutputLanguage(
+      input.agentContext.memory.resolvedInstructions.language,
+    );
+
     const planStepId = await recordStep({
       context: input.agentContext,
       runtime,
       agentType: "ORCHESTRATOR",
       action: "orchestrator.plan",
       outputMetadata: {
-        summary: "Creating research plan…",
+        summary: arabicUi
+          ? "جارٍ إعداد خطة البحث…"
+          : "Creating research plan…",
       },
       status: "RUNNING",
     });
@@ -427,7 +454,9 @@ export class OrchestratorService {
       await updateAgentStep({
         id: planStepId,
         outputMetadata: {
-          summary: `Orchestrator created ${plan.workflow} plan (${plan.source ?? "unknown"})`,
+          summary: arabicUi
+            ? "تم إعداد خطة العمل"
+            : `Orchestrator created ${plan.workflow} plan (${plan.source ?? "unknown"})`,
           workflow: plan.workflow,
           steps: plan.steps,
           rationale: plan.rationale,
@@ -442,7 +471,9 @@ export class OrchestratorService {
           summary:
             error instanceof Error
               ? error.message
-              : "Failed to create research plan",
+              : arabicUi
+                ? "فشل إعداد خطة البحث"
+                : "Failed to create research plan",
         },
         status: "FAILED",
       });
@@ -455,7 +486,9 @@ export class OrchestratorService {
       agentType: "ORCHESTRATOR",
       action: "memory.retrieved",
       outputMetadata: {
-        summary: `Loaded ${input.agentContext.memory.matterFacts.length} matter memory fact(s)`,
+        summary: arabicUi
+          ? `تم تحميل ${input.agentContext.memory.matterFacts.length} واقعة/وقائع من ذاكرة القضية`
+          : `Loaded ${input.agentContext.memory.matterFacts.length} matter memory fact(s)`,
         conflictCount: input.agentContext.memory.conflictCount,
       },
     });
@@ -551,12 +584,18 @@ export class OrchestratorService {
       }
 
       if (result.requiresApproval) {
+        const arabic = isArabicOutputLanguage(
+          input.agentContext.memory.resolvedInstructions.language,
+        );
+        const action = result.approvalAction ?? "create_draft";
         approvalId = await requestHumanApproval({
           workspaceId: input.agentContext.workspaceId,
           matterId: input.agentContext.matterId,
           agentRunId: input.runId,
-          action: result.approvalAction ?? "create_draft",
-          description: `Agent: ${agent.definition.name}. Action: ${result.approvalAction ?? "create_draft"}. Matter: ${input.agentContext.matterTitle}. This draft will be based on retrieved legal authorities and matter documents.`,
+          action,
+          description: arabic
+            ? `الإجراء: إنشاء مسودة. القضية: ${input.agentContext.matterTitle}. ستُبنى المسودة على السندات القانونية ومستندات القضية المسترجعة.`
+            : `Agent: ${agent.definition.name}. Action: ${action}. Matter: ${input.agentContext.matterTitle}. This draft will be based on retrieved legal authorities and matter documents.`,
           proposedOutput: result.output,
           riskLevel: "WRITE",
           actorUserId: input.agentContext.user.userId,

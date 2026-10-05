@@ -4,6 +4,11 @@ export type Messages = {
   brand: string;
   brandTagline: string;
   language: string;
+  theme: string;
+  themeLight: string;
+  themeDark: string;
+  themeSwitchToLight: string;
+  themeSwitchToDark: string;
   home: string;
   matters: string;
   clients: string;
@@ -375,6 +380,26 @@ export type Messages = {
   demoFactReliefValue: string;
   demoResearchQuery: string;
   demoDraftTask: string;
+  aiDraftDefaultTitle: string;
+  articleLabel: string;
+  aiStepDraftCreated: string;
+  aiStepDrafting: string;
+  aiStepApprovalRequested: string;
+  aiStepApprovalCreateDraft: string;
+  aiStepApprovalSaveMemory: string;
+  aiStepSearchingCorpus: string;
+  aiStepSearchedCorpus: string;
+  aiStepRetrievingProvision: string;
+  aiStepRetrievedProvision: string;
+  aiStepSearchingWeb: string;
+  aiStepSearchedWeb: string;
+  aiStepBuildContext: string;
+  aiStepValidateCitations: string;
+  aiStepConversationContext: string;
+  aiStepValidateEvidence: string;
+  aiStepRetrievedTarget: string;
+  aiStepResearchTarget: string;
+  aiStepRetryRetrieval: string;
   tourSkip: string;
   tourBack: string;
   tourNext: string;
@@ -410,6 +435,11 @@ const en: Messages = {
   brand: "Lawyer Workbench",
   brandTagline: "AI legal workspace",
   language: "Language",
+  theme: "Theme",
+  themeLight: "Light",
+  themeDark: "Night",
+  themeSwitchToLight: "Switch to light mode",
+  themeSwitchToDark: "Switch to night mode",
   home: "Home",
   matters: "Matters",
   clients: "Clients",
@@ -818,6 +848,26 @@ const en: Messages = {
     "What does the Egyptian Constitution say about equality before the law and the right to work?",
   demoDraftTask:
     "Using the matter key facts and Egyptian constitutional principles on equality and work, draft a short formal demand letter from counsel for Amira Hassan to Cairo Tech LLC requesting payment in lieu of 30 days' notice and written reasons for termination. Keep it concise and cite constitutional principles where relevant.",
+  aiDraftDefaultTitle: "Demand letter",
+  articleLabel: "Article",
+  aiStepDraftCreated: 'Draft created: "{title}"',
+  aiStepDrafting: "Drafting…",
+  aiStepApprovalRequested: "Approval requested",
+  aiStepApprovalCreateDraft: "Approve draft",
+  aiStepApprovalSaveMemory: "Save matter memory",
+  aiStepSearchingCorpus: "Searching legal corpus…",
+  aiStepSearchedCorpus: "Searched legal corpus",
+  aiStepRetrievingProvision: "Retrieving legal provision…",
+  aiStepRetrievedProvision: "Retrieved legal provision",
+  aiStepSearchingWeb: "Searching the web…",
+  aiStepSearchedWeb: "Searched the web",
+  aiStepBuildContext: "Built legal context",
+  aiStepValidateCitations: "Validated citations",
+  aiStepConversationContext: "Understood conversation context",
+  aiStepValidateEvidence: "Validated evidence",
+  aiStepRetrievedTarget: "Retrieved target provision",
+  aiStepResearchTarget: "Identified research target",
+  aiStepRetryRetrieval: "Retrying targeted retrieval",
   tourSkip: "Skip",
   tourBack: "Back",
   tourNext: "Next",
@@ -866,6 +916,11 @@ const fr: Messages = {
   brand: "Lawyer Workbench",
   brandTagline: "Espace juridique IA",
   language: "Langue",
+  theme: "Thème",
+  themeLight: "Clair",
+  themeDark: "Nuit",
+  themeSwitchToLight: "Passer en mode clair",
+  themeSwitchToDark: "Passer en mode nuit",
   home: "Accueil",
   matters: "Dossiers",
   clients: "Clients",
@@ -1281,6 +1336,26 @@ const fr: Messages = {
     "Que dit la Constitution égyptienne sur l’égalité devant la loi et le droit au travail ?",
   demoDraftTask:
     "À partir des faits clés du dossier et des principes constitutionnels égyptiens sur l’égalité et le travail, rédigez une courte mise en demeure formelle au nom d’Amira Hassan adressée à Cairo Tech LLC, demandant le paiement de 30 jours de préavis et les motifs écrits du licenciement. Soyez concis et citez les principes constitutionnels pertinents.",
+  aiDraftDefaultTitle: "Mise en demeure",
+  articleLabel: "Article",
+  aiStepDraftCreated: 'Brouillon créé : « {title} »',
+  aiStepDrafting: "Rédaction…",
+  aiStepApprovalRequested: "Approbation demandée",
+  aiStepApprovalCreateDraft: "Approuver le brouillon",
+  aiStepApprovalSaveMemory: "Enregistrer la mémoire du dossier",
+  aiStepSearchingCorpus: "Recherche dans le corpus juridique…",
+  aiStepSearchedCorpus: "Corpus juridique consulté",
+  aiStepRetrievingProvision: "Récupération de la disposition…",
+  aiStepRetrievedProvision: "Disposition récupérée",
+  aiStepSearchingWeb: "Recherche sur le web…",
+  aiStepSearchedWeb: "Web consulté",
+  aiStepBuildContext: "Contexte juridique préparé",
+  aiStepValidateCitations: "Citations validées",
+  aiStepConversationContext: "Contexte de conversation compris",
+  aiStepValidateEvidence: "Preuves validées",
+  aiStepRetrievedTarget: "Disposition cible récupérée",
+  aiStepResearchTarget: "Cible de recherche identifiée",
+  aiStepRetryRetrieval: "Nouvelle tentative de récupération",
   tourSkip: "Passer",
   tourBack: "Retour",
   tourNext: "Suivant",
@@ -1329,6 +1404,11 @@ const ar: Messages = {
   brand: "منصة المحامي",
   brandTagline: "مساحة عمل قانونية بالذكاء الاصطناعي",
   language: "اللغة",
+  theme: "المظهر",
+  themeLight: "فاتح",
+  themeDark: "ليلي",
+  themeSwitchToLight: "التبديل إلى الوضع الفاتح",
+  themeSwitchToDark: "التبديل إلى الوضع الليلي",
   home: "الرئيسية",
   matters: "القضايا",
   clients: "العملاء",
@@ -1731,6 +1811,26 @@ const ar: Messages = {
     "ماذا يقول الدستور المصري عن المساواة أمام القانون وحق العمل؟",
   demoDraftTask:
     "باستخدام وقائع القضية الأساسية والمبادئ الدستورية المصرية المتعلقة بالمساواة وحق العمل، صغ إنذارًا رسميًا موجزًا من محامي أميرة حسن موجّهًا إلى شركة كايرو تك، يطلب صرف بدل مهلة ٣٠ يومًا وأسباب إنهاء الخدمة كتابةً. اجعل النص مختصرًا واستشهد بالمبادئ الدستورية ذات الصلة.",
+  aiDraftDefaultTitle: "إنذار رسمي",
+  articleLabel: "المادة",
+  aiStepDraftCreated: 'تم إنشاء المسودة: «{title}»',
+  aiStepDrafting: "جارٍ الصياغة…",
+  aiStepApprovalRequested: "طُلبت الموافقة",
+  aiStepApprovalCreateDraft: "الموافقة على المسودة",
+  aiStepApprovalSaveMemory: "حفظ ذاكرة القضية",
+  aiStepSearchingCorpus: "جارٍ البحث في المجموعة القانونية…",
+  aiStepSearchedCorpus: "تم البحث في المجموعة القانونية",
+  aiStepRetrievingProvision: "جارٍ استرجاع الحكم القانوني…",
+  aiStepRetrievedProvision: "تم استرجاع الحكم القانوني",
+  aiStepSearchingWeb: "جارٍ البحث على الويب…",
+  aiStepSearchedWeb: "تم البحث على الويب",
+  aiStepBuildContext: "تم بناء السياق القانوني",
+  aiStepValidateCitations: "تم التحقق من الاستشهادات",
+  aiStepConversationContext: "تم فهم سياق المحادثة",
+  aiStepValidateEvidence: "تم التحقق من الأدلة",
+  aiStepRetrievedTarget: "تم استرجاع الحكم المستهدف",
+  aiStepResearchTarget: "تم تحديد هدف البحث",
+  aiStepRetryRetrieval: "إعادة محاولة الاسترجاع المستهدف",
   tourSkip: "تخطّي",
   tourBack: "رجوع",
   tourNext: "التالي",

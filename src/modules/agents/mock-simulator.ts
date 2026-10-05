@@ -11,6 +11,11 @@ export function simulateMockToolDecision(
   const observations = input.observations.toLowerCase();
   const allowed = new Set(input.allowedTools);
   const called = (name: string) => observations.includes(`tool:${name}`);
+  const arabic =
+    /[\u0600-\u06FF]/.test(input.task) ||
+    /modern standard arabic|output language \(mandatory\).*arabic/i.test(
+      input.system,
+    );
 
   if (input.agentType === "RESEARCH") {
     if (!called("retrieve_web_source") && allowed.has("retrieve_web_source")) {
@@ -31,7 +36,9 @@ export function simulateMockToolDecision(
     }
     return {
       type: "finalize",
-      summary: "Research complete from available tools.",
+      summary: arabic
+        ? "اكتمل البحث من الأدوات المتاحة."
+        : "Research complete from available tools.",
     };
   }
 
@@ -54,7 +61,9 @@ export function simulateMockToolDecision(
     }
     return {
       type: "finalize",
-      summary: "Document analysis complete from Matter RAG results.",
+      summary: arabic
+        ? "اكتمل تحليل المستندات من نتائج البحث في القضية."
+        : "Document analysis complete from Matter RAG results.",
     };
   }
 
@@ -72,21 +81,27 @@ export function simulateMockToolDecision(
         type: "tool",
         tool: "create_draft",
         input: {
-          title: "Grounded legal draft",
+          title: arabic ? "إنذار بشأن إنهاء الخدمة" : "Grounded legal draft",
           draftType: "LETTER",
           fullText: buildMockDraft(input),
           sections: [
             {
               kind: "SOURCE_FACT",
-              content: "Matter facts from retrieved document evidence.",
+              content: arabic
+                ? "وقائع القضية من أدلة المستندات المسترجعة."
+                : "Matter facts from retrieved document evidence.",
             },
             {
               kind: "LEGAL_AUTHORITY",
-              content: "Legal authorities from retrieved research evidence only.",
+              content: arabic
+                ? "السندات القانونية من أدلة البحث المسترجعة فقط."
+                : "Legal authorities from retrieved research evidence only.",
             },
             {
               kind: "INFERENCE",
-              content: "Issues may warrant lawyer review based on available evidence.",
+              content: arabic
+                ? "قد تستدعي المسائل مراجعة المحامي بناءً على الأدلة المتاحة."
+                : "Issues may warrant lawyer review based on available evidence.",
             },
             {
               kind: "DRAFT_LANGUAGE",
@@ -105,9 +120,12 @@ export function simulateMockToolDecision(
         tool: "request_approval",
         input: {
           action: "create_draft",
-          description:
-            "Draft requires lawyer review before external use.",
-          proposedOutput: { title: "Grounded legal draft" },
+          description: arabic
+            ? "تتطلب المسودة مراجعة المحامي قبل أي استخدام خارجي."
+            : "Draft requires lawyer review before external use.",
+          proposedOutput: {
+            title: arabic ? "إنذار بشأن إنهاء الخدمة" : "Grounded legal draft",
+          },
           riskLevel: "WRITE",
         },
         reason: "Request human approval",
@@ -115,16 +133,22 @@ export function simulateMockToolDecision(
     }
     return {
       type: "finalize",
-      summary: "Draft created and pending human approval.",
+      summary: arabic
+        ? "تم إنشاء المسودة وبانتظار موافقة المحامي."
+        : "Draft created and pending human approval.",
       requiresApproval: true,
       output: {
-        title: "Grounded legal draft",
+        title: arabic ? "إنذار بشأن إنهاء الخدمة" : "Grounded legal draft",
         draft_type: "LETTER",
         full_text: buildMockDraft(input),
         sections: [],
         citation_ids: [],
         evidence_ids: [],
-        open_questions: ["Lawyer must approve before external use."],
+        open_questions: [
+          arabic
+            ? "يجب موافقة المحامي قبل أي استخدام خارجي."
+            : "Lawyer must approve before external use.",
+        ],
       },
     };
   }
@@ -135,16 +159,21 @@ export function simulateMockToolDecision(
         type: "tool",
         tool: "record_review_findings",
         input: {
-          summary: "Review completed against available evidence.",
+          summary: arabic
+            ? "اكتملت المراجعة وفق الأدلة المتاحة."
+            : "Review completed against available evidence.",
           findings: [
             {
               severity: "MEDIUM",
               type: "POTENTIAL_ISSUE",
               location: "overall",
-              description:
-                "Lawyer judgment still required; automatic review flags priority items only.",
+              description: arabic
+                ? "ما زال حكم المحامي مطلوبًا؛ المراجعة الآلية تُبرز بنود الأولوية فقط."
+                : "Lawyer judgment still required; automatic review flags priority items only.",
               evidence: [],
-              recommended_action: "Perform final human review.",
+              recommended_action: arabic
+                ? "أجرِ مراجعة بشرية نهائية."
+                : "Perform final human review.",
             },
           ],
         },
@@ -153,13 +182,15 @@ export function simulateMockToolDecision(
     }
     return {
       type: "finalize",
-      summary: "Review complete.",
+      summary: arabic ? "اكتملت المراجعة." : "Review complete.",
     };
   }
 
   return {
     type: "finalize",
-    summary: "No further tools available.",
+    summary: arabic
+      ? "لا توجد أدوات إضافية متاحة."
+      : "No further tools available.",
     incomplete: true,
   };
 }
@@ -173,9 +204,33 @@ function extractSearchQuery(task: string) {
 }
 
 function buildMockDraft(input: ChooseNextActionInput) {
+  const arabic = /[\u0600-\u06FF]/.test(input.task);
   const clientMatch = input.matterContext.match(
-    /\[(?:LAWYER_CONFIRMED|USER_PROVIDED|DOCUMENT_DERIVED|CONVERSATION_DERIVED|AI_DERIVED)[^\]]*\]\s*client:\s*(.+)/i,
+    /\[(?:LAWYER_CONFIRMED|USER_PROVIDED|DOCUMENT_DERIVED|CONVERSATION_DERIVED|AI_DERIVED)[^\]]*\]\s*(?:client|اسم_الموظف|employee_name):\s*(.+)/i,
   );
+  if (arabic) {
+    const clientLine = clientMatch?.[1]
+      ? `بالنيابة عن ${clientMatch[1].trim()} (سياق الذاكرة، وليس سندًا قانونيًا).`
+      : "بالنيابة عن موكلنا.";
+    return [
+      "السادة الأفاضل،",
+      "",
+      clientLine,
+      "",
+      "نكتب إليكم بشأن مسائل مستمدة من مستندات القضية والأدلة القانونية المسترجعة.",
+      "",
+      "وقائع القضية والسندات القانونية مقصورة على الأدلة المسترجعة عبر الأدوات.",
+      "الذاكرة سياقية فقط ولا تُعامل كسند قانوني.",
+      "هذه المسودة لا تختلق استشهادات.",
+      "",
+      `المهمة: ${input.task.slice(0, 240)}`,
+      "",
+      "تتطلب هذه المسودة موافقة المحامي قبل أي استخدام خارجي.",
+      "",
+      "وتفضلوا بقبول فائق الاحترام،",
+    ].join("\n");
+  }
+
   const clientLine = clientMatch?.[1]
     ? `On behalf of ${clientMatch[1].trim()} (MEMORY CONTEXT, not legal authority).`
     : "On behalf of our client.";

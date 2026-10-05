@@ -2,6 +2,9 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
+import { humanizeStep } from "@/components/workbench/labels";
+import { useI18n } from "@/modules/i18n/provider";
+
 type AgentStep = {
   sequence: number;
   agentType: string;
@@ -121,6 +124,7 @@ export function AgentPanel({
   initialRuns: AgentRunListItem[];
   initialApprovals: PendingApproval[];
 }) {
+  const { t, locale } = useI18n();
   const [task, setTask] = useState<string>(QUICK_ACTIONS[4].task);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -327,9 +331,7 @@ export function AgentPanel({
             {(activeRun.steps ?? []).map((step) => (
               <li key={`${step.sequence}-${step.action}`}>
                 <span className="mr-2">{stepIcon(step.status)}</span>
-                <span className="font-medium">{step.agentType}</span>
-                {" · "}
-                {step.summary ?? step.action}
+                {humanizeStep(step, t, locale)}
               </li>
             ))}
           </ul>

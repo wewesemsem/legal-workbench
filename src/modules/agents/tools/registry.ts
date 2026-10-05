@@ -1,5 +1,10 @@
 import { ZodError } from "zod";
 
+import {
+  arabicDefaultDraftTitle,
+  isArabicOutputLanguage,
+  looksLatinOnly,
+} from "@/modules/agents/prompts";
 import type { ToolExecutionContext } from "@/modules/agents/types";
 import { ALL_AGENT_TOOLS } from "@/modules/agents/tools/definitions";
 import type {
@@ -113,12 +118,14 @@ export class ToolRegistry {
 
     try {
       const output = await tool.execute(parsedInput, context);
+      const language =
+        context.agentContext.memory.resolvedInstructions.language;
       return {
         ok: true,
         tool: toolName,
         riskLevel: tool.riskLevel,
         output,
-        summary: summarizeToolOutput(toolName, output),
+        summary: summarizeToolOutput(toolName, output, language),
       };
     } catch (error) {
       return {
@@ -131,36 +138,61 @@ export class ToolRegistry {
   }
 }
 
-function summarizeToolOutput(toolName: string, output: unknown): string {
+function summarizeToolOutput(
+  toolName: string,
+  output: unknown,
+  language?: string | null,
+): string {
+  const arabic = isArabicOutputLanguage(language);
   if (!output || typeof output !== "object") {
-    return `${toolName} completed`;
+    return arabic ? "اكتمل الإجراء" : `${toolName} completed`;
   }
   const record = output as Record<string, unknown>;
   if (typeof record.evidenceCount === "number") {
-    return `${toolName}: ${record.evidenceCount} evidence item(s)`;
+    return arabic
+      ? `${record.evidenceCount} عنصر(عناصر) دليل`
+      : `${toolName}: ${record.evidenceCount} evidence item(s)`;
   }
   if (Array.isArray(record.documents)) {
-    return `${toolName}: ${record.documents.length} document(s)`;
+    return arabic
+      ? `${record.documents.length} مستند(ات)`
+      : `${toolName}: ${record.documents.length} document(s)`;
   }
   if (Array.isArray(record.hits)) {
-    return `${toolName}: ${record.hits.length} hit(s)`;
+    return arabic
+      ? `${record.hits.length} نتيجة/نتائج`
+      : `${toolName}: ${record.hits.length} hit(s)`;
   }
   if (Array.isArray(record.findings)) {
-    return `${toolName}: ${record.findings.length} finding(s)`;
+    return arabic
+      ? `${record.findings.length} ملاحظة/ملاحظات`
+      : `${toolName}: ${record.findings.length} finding(s)`;
   }
   if (typeof record.title === "string") {
-    return `${toolName}: draft "${record.title}"`;
+    const title =
+      arabic && looksLatinOnly(record.title)
+        ? arabicDefaultDraftTitle()
+        : record.title;
+    return arabic
+      ? `تم إنشاء المسودة: «${title}»`
+      : `${toolName}: draft "${title}"`;
   }
   if (typeof record.action === "string") {
-    return `${toolName}: approval requested for ${record.action}`;
+    return arabic
+      ? "طُلبت الموافقة"
+      : `${toolName}: approval requested for ${record.action}`;
   }
   if (typeof record.memoryId === "string") {
-    return `${toolName}: memory ${record.status ?? "ok"}`;
+    return arabic
+      ? `ذاكرة القضية: ${record.status ?? "ok"}`
+      : `${toolName}: memory ${record.status ?? "ok"}`;
   }
   if (typeof record.matterCount === "number") {
-    return `${toolName}: ${record.matterCount} matter memory item(s)`;
+    return arabic
+      ? `${record.matterCount} عنصر(عناصر) في ذاكرة القضية`
+      : `${toolName}: ${record.matterCount} matter memory item(s)`;
   }
-  return `${toolName} completed`;
+  return arabic ? "اكتمل الإجراء" : `${toolName} completed`;
 }
 
 let defaultRegistry: ToolRegistry | null = null;

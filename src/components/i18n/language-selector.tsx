@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { LOCALES, LOCALE_META } from "@/modules/i18n/config";
 import { useI18n } from "@/modules/i18n/provider";
 
@@ -43,7 +44,8 @@ export function LanguageSelector({
 
 export function LanguageBar() {
   return (
-    <div className="flex items-center justify-end border-b border-stone-200/80 bg-[var(--panel)]/90 px-4 py-2 backdrop-blur sm:px-6">
+    <div className="flex items-center justify-end gap-2 border-b border-stone-200/80 bg-[var(--panel)]/90 px-4 py-2 backdrop-blur sm:gap-3 sm:px-6">
+      <ThemeToggle />
       <LanguageSelector />
     </div>
   );

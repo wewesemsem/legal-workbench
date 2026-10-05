@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { approvalActionLabel } from "@/components/workbench/labels";
 import { useI18n } from "@/modules/i18n/provider";
 
 export type PendingApproval = {
@@ -37,7 +38,7 @@ export function ApprovalDialog({
   canManage: boolean;
   onResolved?: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editText, setEditText] = useState(() =>
@@ -102,7 +103,13 @@ export function ApprovalDialog({
         >
           {isMemory ? t.approvalMemoryTitle : t.approvalDraftBody}
         </h2>
-        <p className="mt-2 text-sm text-stone-700">{approval.description}</p>
+        <p className="mt-2 text-sm text-stone-700">
+          {approvalActionLabel(approval.action, t)}
+        </p>
+        {approval.description &&
+        (locale !== "ar" || /[\u0600-\u06FF]/.test(approval.description)) ? (
+          <p className="mt-1 text-sm text-stone-600">{approval.description}</p>
+        ) : null}
         <p className="mt-1 text-xs text-stone-500">
           {t.matters}: {matterTitle}
         </p>

@@ -10,6 +10,7 @@ import {
   updateAgentStep,
 } from "@/modules/agents/repository";
 import { writeAgentAudit } from "@/modules/agents/audit";
+import { isArabicOutputLanguage } from "@/modules/agents/prompts";
 
 export interface LegalAgent {
   readonly definition: AgentDefinition;
@@ -66,22 +67,39 @@ export async function recordStep(input: {
   });
 }
 
-function runningToolSummary(toolName: string) {
+function runningToolSummary(toolName: string, language?: string | null) {
+  const arabic = isArabicOutputLanguage(language);
   switch (toolName) {
     case "search_legal_corpus":
-      return "Searching legal corpus…";
+      return arabic
+        ? "جارٍ البحث في المجموعة القانونية…"
+        : "Searching legal corpus…";
     case "retrieve_legal_provision":
-      return "Retrieving legal provision…";
+      return arabic
+        ? "جارٍ استرجاع الحكم القانوني…"
+        : "Retrieving legal provision…";
     case "search_web":
-      return "Searching the web…";
+      return arabic ? "جارٍ البحث على الويب…" : "Searching the web…";
     case "retrieve_document":
-      return "Retrieving matter document…";
+      return arabic
+        ? "جارٍ استرجاع مستند القضية…"
+        : "Retrieving matter document…";
     case "search_matter_documents":
-      return "Searching matter documents…";
+      return arabic
+        ? "جارٍ البحث في مستندات القضية…"
+        : "Searching matter documents…";
+    case "create_draft":
+      return arabic ? "جارٍ إنشاء المسودة…" : "Creating draft…";
+    case "request_approval":
+      return arabic ? "جارٍ طلب الموافقة…" : "Requesting approval…";
+    case "build_legal_context":
+      return arabic ? "جارٍ بناء السياق القانوني…" : "Building legal context…";
     case "draft_document":
-      return "Drafting document…";
+      return arabic ? "جارٍ صياغة المستند…" : "Drafting document…";
     default:
-      return `Running ${toolName.replaceAll("_", " ")}…`;
+      return arabic
+        ? "جارٍ التشغيل…"
+        : `Running ${toolName.replaceAll("_", " ")}…`;
   }
 }
 
@@ -99,6 +117,7 @@ export async function invokeAllowedTool(input: {
     input.agent.allowedTools,
     input.toolCallCount,
   );
+  const language = input.context.memory.resolvedInstructions.language;
   const inputMetadata = {
     // Never log full document/prompt contents.
     keys:
@@ -113,7 +132,9 @@ export async function invokeAllowedTool(input: {
     action: `tool:${input.toolName}`,
     tool: input.toolName,
     inputMetadata,
-    outputMetadata: { summary: runningToolSummary(input.toolName) },
+    outputMetadata: {
+      summary: runningToolSummary(input.toolName, language),
+    },
     status: "RUNNING",
   });
 

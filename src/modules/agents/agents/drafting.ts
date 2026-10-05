@@ -4,6 +4,10 @@ import { getAgentModelGateway } from "@/modules/agents/model-gateway";
 import {
   DRAFTING_AGENT_INSTRUCTIONS,
   SHARED_AGENT_SYSTEM,
+  arabicDefaultDraftTitle,
+  isArabicOutputLanguage,
+  looksLatinOnly,
+  outputLanguageInstruction,
 } from "@/modules/agents/prompts";
 import type {
   AgentDefinition,
@@ -35,6 +39,10 @@ const DEFINITION: AgentDefinition = {
   ],
 };
 
+function isArabicLanguage(language?: string | null) {
+  return isArabicOutputLanguage(language);
+}
+
 function buildFallbackDraft(
   contextTask: string,
   research: ResearchAgentOutput | null,
@@ -42,70 +50,116 @@ function buildFallbackDraft(
   review: ReviewAgentOutput | null,
   memoryFacts: Array<{ key: string; value: string; sourceType: string }> = [],
   draftingStyle?: string,
+  language?: string | null,
 ): DraftingAgentOutput {
+  const arabic = isArabicLanguage(language) || /[\u0600-\u06FF]/.test(contextTask);
   const sourceFacts =
     documents?.documents.flatMap((doc) =>
-      doc.clauses.slice(0, 3).map((clause) => `From ${doc.filename}: ${clause}`),
+      doc.clauses.slice(0, 3).map((clause) =>
+        arabic
+          ? `من ${doc.filename}: ${clause}`
+          : `From ${doc.filename}: ${clause}`,
+      ),
     ) ?? [];
   const authorities =
     research?.authorities.slice(0, 5).map(
       (authority) =>
-        `${authority.title}${authority.article ? ` (Art. ${authority.article})` : ""}: ${authority.evidence.slice(0, 240)}`,
+        `${authority.title}${authority.article ? (arabic ? ` (المادة ${authority.article})` : ` (Art. ${authority.article})`) : ""}: ${authority.evidence.slice(0, 240)}`,
     ) ?? [];
   const findings =
     review?.findings
       .slice(0, 5)
       .map((finding) => `[${finding.severity}] ${finding.type}: ${finding.description}`) ??
     [];
-  const clientFact = memoryFacts.find((item) => item.key === "client");
+  const clientFact = memoryFacts.find(
+    (item) => item.key === "client" || item.key === "اسم_الموظف" || item.key === "employee_name",
+  );
   const memoryLines = memoryFacts
     .slice(0, 8)
     .map((item) => `${item.key}: ${item.value} (${item.sourceType})`);
 
   if (!sourceFacts.length) {
     sourceFacts.push(
-      "Matter document facts were limited; draft relies only on available retrieved excerpts.",
+      arabic
+        ? "وقائع مستندات القضية محدودة؛ تعتمد المسودة فقط على المقتطفات المسترجعة المتاحة."
+        : "Matter document facts were limited; draft relies only on available retrieved excerpts.",
     );
   }
   if (!authorities.length) {
     authorities.push(
-      "No grounded legal authority was retrieved. Do not invent statutory citations.",
+      arabic
+        ? "لم يتم استرجاع سند قانوني موثّق. لا تختلق استشهادات تشريعية."
+        : "No grounded legal authority was retrieved. Do not invent statutory citations.",
     );
   }
 
   const inference = findings.length
-    ? `Based on retrieved evidence, the following issues may warrant lawyer review:\n${findings.join("\n")}`
-    : "Based on available evidence, potential issues should be reviewed by the responsible lawyer.";
+    ? arabic
+      ? `بناءً على الأدلة المسترجعة، قد تستدعي المسائل التالية مراجعة المحامي:\n${findings.join("\n")}`
+      : `Based on retrieved evidence, the following issues may warrant lawyer review:\n${findings.join("\n")}`
+    : arabic
+      ? "بناءً على الأدلة المتاحة، ينبغي مراجعة المسائل المحتملة من المحامي المسؤول."
+      : "Based on available evidence, potential issues should be reviewed by the responsible lawyer.";
 
-  const styleNote = draftingStyle ? `Style preference: ${draftingStyle}.` : "";
-  const fullText = [
-    "Dear Sir/Madam,",
-    "",
-    clientFact
-      ? `On behalf of ${clientFact.value} (from MEMORY CONTEXT, not legal authority):`
-      : "On behalf of our client:",
-    "",
-    "MEMORY CONTEXT (not legal authority):",
-    ...(memoryLines.length ? memoryLines.map((item) => `- ${item}`) : ["- (none)"]),
-    "",
-    "SOURCE FACT (matter documents):",
-    ...sourceFacts.map((item) => `- ${item}`),
-    "",
-    "LEGAL AUTHORITY (retrieved evidence only):",
-    ...authorities.map((item) => `- ${item}`),
-    "",
-    "INFERENCE (not established fact):",
-    inference,
-    "",
-    "DRAFT LANGUAGE:",
-    "Please review the issues above with counsel. This draft is not filed or sent until approved.",
-    styleNote,
-    "",
-    `Task: ${contextTask.slice(0, 240)}`,
-  ].join("\n");
+  const styleNote = draftingStyle
+    ? arabic
+      ? `تفضيل الأسلوب: ${draftingStyle}.`
+      : `Style preference: ${draftingStyle}.`
+    : "";
+  const fullText = arabic
+    ? [
+        "السادة الأفاضل،",
+        "",
+        clientFact
+          ? `بالنيابة عن ${clientFact.value} (من سياق الذاكرة، وليس سندًا قانونيًا):`
+          : "بالنيابة عن موكلنا:",
+        "",
+        "سياق الذاكرة (ليس سندًا قانونيًا):",
+        ...(memoryLines.length ? memoryLines.map((item) => `- ${item}`) : ["- (لا يوجد)"]),
+        "",
+        "وقائع المصدر (مستندات القضية):",
+        ...sourceFacts.map((item) => `- ${item}`),
+        "",
+        "السند القانوني (الأدلة المسترجعة فقط):",
+        ...authorities.map((item) => `- ${item}`),
+        "",
+        "الاستنتاج (ليس واقعة ثابتة):",
+        inference,
+        "",
+        "نص المسودة:",
+        "يرجى مراجعة المسائل أعلاه مع المحامي. لا تُرسل هذه المسودة أو تُستخدم خارجيًا قبل الموافقة.",
+        styleNote,
+        "",
+        `المهمة: ${contextTask.slice(0, 240)}`,
+      ].join("\n")
+    : [
+        "Dear Sir/Madam,",
+        "",
+        clientFact
+          ? `On behalf of ${clientFact.value} (from MEMORY CONTEXT, not legal authority):`
+          : "On behalf of our client:",
+        "",
+        "MEMORY CONTEXT (not legal authority):",
+        ...(memoryLines.length ? memoryLines.map((item) => `- ${item}`) : ["- (none)"]),
+        "",
+        "SOURCE FACT (matter documents):",
+        ...sourceFacts.map((item) => `- ${item}`),
+        "",
+        "LEGAL AUTHORITY (retrieved evidence only):",
+        ...authorities.map((item) => `- ${item}`),
+        "",
+        "INFERENCE (not established fact):",
+        inference,
+        "",
+        "DRAFT LANGUAGE:",
+        "Please review the issues above with counsel. This draft is not filed or sent until approved.",
+        styleNote,
+        "",
+        `Task: ${contextTask.slice(0, 240)}`,
+      ].join("\n");
 
   return {
-    title: "Employment issues letter",
+    title: arabic ? "إنذار بشأن إنهاء الخدمة" : "Employment issues letter",
     draft_type: "DEMAND_OR_EXPLANATORY_LETTER",
     sections: [
       { kind: "SOURCE_FACT", content: sourceFacts.join("\n") },
@@ -125,9 +179,16 @@ function buildFallbackDraft(
     ],
     open_questions: [
       ...(research?.open_questions ?? []),
-      "Lawyer must approve before any external communication.",
-      ...(authorities[0]?.includes("No grounded")
-        ? ["UNSUPPORTED / NEEDS REVIEW: missing legal authority"]
+      arabic
+        ? "يجب موافقة المحامي قبل أي تواصل خارجي."
+        : "Lawyer must approve before any external communication.",
+      ...(authorities[0]?.includes("No grounded") ||
+      authorities[0]?.includes("لم يتم استرجاع")
+        ? [
+            arabic
+              ? "غير مدعوم / يحتاج مراجعة: نقص السند القانوني"
+              : "UNSUPPORTED / NEEDS REVIEW: missing legal authority",
+          ]
         : []),
     ],
   };
@@ -138,16 +199,18 @@ async function maybeGenerateWithGateway(input: {
   fallback: DraftingAgentOutput;
   evidenceText: string;
   priorText: string;
+  language?: string | null;
 }): Promise<DraftingAgentOutput> {
   if (getEnv().LLM_PROVIDER === "mock") {
     return input.fallback;
   }
 
   const gateway = getAgentModelGateway();
+  const languageRule = outputLanguageInstruction(input.language);
   const structured = await gateway.structuredOutput({
-    system: DEFINITION.systemInstructions,
+    system: `${DEFINITION.systemInstructions}\n\n${languageRule}`,
     instructions:
-      "Produce a grounded draft JSON. Never invent authorities. Distinguish SOURCE_FACT, LEGAL_AUTHORITY, INFERENCE, DRAFT_LANGUAGE. If evidence is insufficient, mark open_questions with UNSUPPORTED / NEEDS REVIEW.",
+      "Produce a grounded draft JSON. Never invent authorities. Distinguish SOURCE_FACT, LEGAL_AUTHORITY, INFERENCE, DRAFT_LANGUAGE. If evidence is insufficient, mark open_questions with UNSUPPORTED / NEEDS REVIEW. Follow OUTPUT LANGUAGE rules for title and full_text.",
     task: input.task,
     matterContext: "Matter-scoped drafting only.",
     evidence: input.evidenceText,
@@ -174,13 +237,21 @@ async function maybeGenerateWithGateway(input: {
     return input.fallback;
   }
 
+  const rawTitle =
+    typeof structured.title === "string" ? structured.title : input.fallback.title;
+  const title =
+    isArabicOutputLanguage(input.language) && looksLatinOnly(rawTitle)
+      ? arabicDefaultDraftTitle()
+      : rawTitle;
+
   return {
     ...input.fallback,
     ...structured,
-    title:
-      typeof structured.title === "string"
-        ? structured.title
-        : input.fallback.title,
+    title,
+    draft_type:
+      typeof structured.draft_type === "string"
+        ? structured.draft_type
+        : input.fallback.draft_type,
     full_text: String(structured.full_text),
     sections: Array.isArray(structured.sections)
       ? (structured.sections as DraftingAgentOutput["sections"])
@@ -218,10 +289,12 @@ export function createDraftingAgent(runtime: AgentRuntime): LegalAgent {
         review,
         context.memory.matterFacts,
         context.memory.resolvedInstructions.draftingStyle,
+        context.memory.resolvedInstructions.language,
       );
       const draft = await maybeGenerateWithGateway({
         task,
         fallback,
+        language: context.memory.resolvedInstructions.language,
         evidenceText: [
           context.memory.formatted,
           "",
@@ -250,7 +323,10 @@ export function createDraftingAgent(runtime: AgentRuntime): LegalAgent {
         agent: DEFINITION,
         task,
         buildFinalResult: ({ lastOutput, incomplete, requiresApproval }) => {
-          const output =
+          const arabic = isArabicLanguage(
+            context.memory.resolvedInstructions.language,
+          );
+          let output =
             lastOutput && typeof lastOutput.full_text === "string"
               ? ({ ...draft, ...lastOutput } as DraftingAgentOutput)
               : lastOutput && typeof lastOutput.fullText === "string"
@@ -261,9 +337,19 @@ export function createDraftingAgent(runtime: AgentRuntime): LegalAgent {
                   } as DraftingAgentOutput)
                 : draft;
 
+          if (
+            arabic &&
+            typeof output.title === "string" &&
+            looksLatinOnly(output.title)
+          ) {
+            output = { ...output, title: arabicDefaultDraftTitle() };
+          }
+
           return {
             agentType: "DRAFTING",
-            summary: `Created draft: ${output.title}`,
+            summary: arabic
+              ? `تم إنشاء المسودة: «${output.title}»`
+              : `Created draft: ${output.title}`,
             output: output as unknown as Record<string, unknown>,
             evidenceIds: output.evidence_ids ?? [],
             citationIds: output.citation_ids ?? [],
@@ -271,10 +357,16 @@ export function createDraftingAgent(runtime: AgentRuntime): LegalAgent {
             requiresApproval: true,
             approvalAction: "create_draft",
             statusSummary: incomplete
-              ? "Drafting incomplete"
+              ? arabic
+                ? "الصياغة غير مكتملة"
+                : "Drafting incomplete"
               : requiresApproval || true
-                ? "Waiting for approval"
-                : "Draft complete",
+                ? arabic
+                  ? "بانتظار الموافقة"
+                  : "Waiting for approval"
+                : arabic
+                  ? "اكتملت المسودة"
+                  : "Draft complete",
             incomplete,
           };
         },

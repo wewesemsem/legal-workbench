@@ -25,6 +25,112 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Deploy (Railway staging)
+
+Staging/demo target for you and a few testers. Uses a long-running Node process (agent runs can exceed serverless timeouts), Railway Postgres with pgvector, and a volume for document files.
+
+### 1. Create the project
+
+```bash
+# Install CLI if needed: https://docs.railway.com/guides/cli
+railway login
+railway init   # or: railway link
+```
+
+Connect the GitHub repo in the Railway dashboard, or deploy from this directory:
+
+```bash
+railway up
+```
+
+[`railway.toml`](railway.toml) sets `npm run build`, `npm start`, and runs `npm run db:migrate` as a pre-deploy step.
+
+### 2. Add Postgres (pgvector)
+
+1. In the Railway project: **New → Database → PostgreSQL**.
+2. On the web service, set `DATABASE_URL` to the Postgres variable reference (e.g. `${{Postgres.DATABASE_URL}}`).
+3. Confirm the extension works (Railway Postgres supports it; migrations also run `CREATE EXTENSION IF NOT EXISTS vector`):
+
+```bash
+railway connect Postgres
+# then: CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+If the managed addon lacks `vector`, add a Docker service from `pgvector/pgvector:pg16` instead and point `DATABASE_URL` at that instance.
+
+### 3. Persistent file storage
+
+1. Web service → **Settings → Volumes** → mount path `/data/storage`.
+2. Set:
+
+```bash
+STORAGE_PROVIDER=local
+LOCAL_STORAGE_PATH=/data/storage
+```
+
+Do not use the default local `.data/storage` path on Railway — it is not durable across deploys.
+
+### 4. Required environment variables
+
+Copy from [`.env.railway.example`](.env.railway.example). Minimum:
+
+| Variable | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `DATABASE_URL` | Railway Postgres URL / reference |
+| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
+| `BETTER_AUTH_URL` | Public HTTPS URL (after generating a domain) |
+| `NEXT_PUBLIC_APP_URL` | Same public HTTPS URL |
+| `STORAGE_PROVIDER` | `local` |
+| `LOCAL_STORAGE_PATH` | `/data/storage` |
+
+Demo-safe defaults (already fine for staging):
+
+- `DOCUMENT_AI_PROVIDER=mock`
+- `LLM_PROVIDER=mock`
+- `LEGAL_EMBEDDING_PROVIDER=mock`
+- `EMAIL_PROVIDER=console`
+- `LEGAL_CORPUS_MODE=fixture`
+
+Generate a public domain: web service → **Settings → Networking → Generate Domain**, then set both auth/app URL vars to that `https://….up.railway.app` value.
+
+### 5. Migrate + smoke test
+
+Migrations run automatically via `preDeployCommand` in [`railway.toml`](railway.toml). To run manually:
+
+```bash
+railway run npm run db:migrate
+```
+
+Then verify:
+
+1. Open the public URL → register / login
+2. Create a matter → upload a small PDF
+3. Start a mock agent run
+4. Redeploy or restart → confirm the uploaded file is still available (volume persistence)
+
+### Optional live AI / email
+
+Same deploy; flip variables on the web service:
+
+```bash
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+LEGAL_EMBEDDING_PROVIDER=openai
+# then one-off: railway run npm run corpus -- index
+
+WEB_SEARCH_PROVIDER=brave
+BRAVE_SEARCH_API_KEY=...
+
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=re_...
+EMAIL_FROM=Lawyer Workbench <noreply@your-domain.com>
+```
+
+### When you outgrow staging
+
+Move to **Vercel Pro + Neon (pgvector) + Cloudflare R2 + Resend** for private beta with versioned object storage and stronger backup/uptime controls.
+
 ## Scripts
 
 | Command | Purpose |

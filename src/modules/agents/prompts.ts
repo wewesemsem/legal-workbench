@@ -52,6 +52,52 @@ Label SOURCE FACT, LEGAL AUTHORITY, INFERENCE, and DRAFT LANGUAGE clearly.
 Do not send email, file documents, or contact anyone.
 Drafts require human approval before external use.`;
 
+export function isArabicOutputLanguage(language?: string | null) {
+  const normalized = (language ?? "").trim().toLowerCase();
+  return (
+    normalized === "ar" ||
+    normalized === "arabic" ||
+    normalized.startsWith("ar-") ||
+    normalized.includes("عربي") ||
+    /[\u0600-\u06FF]/.test(language ?? "")
+  );
+}
+
+export function isFrenchOutputLanguage(language?: string | null) {
+  const normalized = (language ?? "").trim().toLowerCase();
+  return (
+    normalized === "fr" ||
+    normalized === "french" ||
+    normalized.startsWith("fr-")
+  );
+}
+
+export function looksLatinOnly(text: string) {
+  return /[A-Za-z]/.test(text) && !/[\u0600-\u06FF]/.test(text);
+}
+
+export function arabicDefaultDraftTitle() {
+  return "إنذار رسمي";
+}
+
+export function outputLanguageInstruction(language?: string | null) {
+  if (isArabicOutputLanguage(language)) {
+    return `OUTPUT LANGUAGE (mandatory):
+- Write all user-facing text in Modern Standard Arabic.
+- This includes draft title, full_text, summaries, section content, open_questions, and create_draft title.
+- Do not use English sentences or English draft titles (e.g. never "Response Letter…").
+- Keep Latin only for unavoidable proper nouns or citation markers.`;
+  }
+  if (isFrenchOutputLanguage(language)) {
+    return `OUTPUT LANGUAGE (mandatory):
+- Write all user-facing text in French.
+- This includes draft title, full_text, summaries, section content, and open_questions.`;
+  }
+  return `OUTPUT LANGUAGE:
+- Match the language of the user task when clear.
+- Prefer clear professional English if the task language is ambiguous.`;
+}
+
 export const REVIEW_AGENT_INSTRUCTIONS = `You specialize in reviewing legal work products.
 Flag unsupported claims, missing citations, contradictions, ambiguity,
 and missing evidence. Severity indicates review priority, not legal certainty.

@@ -1,4 +1,29 @@
+import type { Locale } from "@/modules/i18n/config";
 import type { Messages } from "@/modules/i18n/messages";
+
+function looksArabic(text: string) {
+  return /[\u0600-\u06FF]/.test(text);
+}
+
+function looksMostlyEnglish(text: string) {
+  return /[A-Za-z]/.test(text) && !looksArabic(text);
+}
+
+function localizeDraftTitle(title: string, t: Messages, locale: Locale) {
+  const trimmed = title.trim();
+  if (!trimmed) return t.aiDraftDefaultTitle;
+  if (locale === "ar" && looksMostlyEnglish(trimmed)) {
+    return t.aiDraftDefaultTitle;
+  }
+  if (
+    locale === "fr" &&
+    looksMostlyEnglish(trimmed) &&
+    /response letter|demand letter|employment/i.test(trimmed)
+  ) {
+    return t.aiDraftDefaultTitle;
+  }
+  return trimmed;
+}
 
 export function matterStatusLabel(status: string, t: Messages) {
   switch (status) {
@@ -63,42 +88,88 @@ export function humanizeStep(
     status?: string;
   },
   t: Messages,
+  locale: Locale = "en",
 ) {
-  if (
-    step.summary &&
-    !/toolregistry|embedding|planner|gateway/i.test(step.summary)
-  ) {
-    return step.summary;
-  }
-
+  const summary = step.summary?.trim() ?? "";
   const action = (step.action ?? "").toLowerCase();
   const tool = (step.tool ?? "").toLowerCase();
   const agent = (step.agentType ?? "").toUpperCase();
   const running =
     step.status === "RUNNING" || step.status === "PENDING";
+  const isDraftTool =
+    tool === "create_draft" ||
+    action.includes("create_draft") ||
+    /create_draft|created draft|إنشاء المسودة|تم إنشاء المسودة/i.test(
+      summary,
+    );
 
-  if (tool === "search_legal_corpus") {
-    return running ? "Searching legal corpus…" : "Searched legal corpus";
+  const draftQuoted =
+    summary.match(
+      /(?:create_draft|Created draft|تم إنشاء المسودة)\s*:?\s*(?:draft\s*|مسودة\s*)?[«"]([^»"]+)[»"]/i,
+    ) ??
+    summary.match(/(?:create_draft|Created draft)\s*:?\s*(?:draft\s*)?(.+)$/i);
+  const draftPlain = summary.match(/^Created draft:\s*(.+)$/i);
+  if (isDraftTool || draftQuoted?.[1] || draftPlain?.[1]) {
+    const rawTitle = (draftQuoted?.[1] ?? draftPlain?.[1] ?? "").trim();
+    const title = localizeDraftTitle(rawTitle, t, locale);
+    return t.aiStepDraftCreated.replace("{title}", title);
   }
-  if (tool === "retrieve_legal_provision") {
-    return running
-      ? "Retrieving legal provision…"
-      : "Retrieved legal provision";
+
+  if (
+    /request_approval|approval requested|طُلبت الموافقة/i.test(summary) ||
+    tool === "request_approval"
+  ) {
+    return t.aiStepApprovalRequested;
   }
+
+  if (
+    tool === "search_legal_corpus" ||
+    /search(?:ed|ing)? legal corpus/i.test(summary)
+  ) {
+    return running ? t.aiStepSearchingCorpus : t.aiStepSearchedCorpus;
+  }
+  if (
+    tool === "retrieve_legal_provision" ||
+    /retriev(?:ed|ing) legal provision/i.test(summary)
+  ) {
+    return running ? t.aiStepRetrievingProvision : t.aiStepRetrievedProvision;
+  }
+  if (tool === "search_web" || /search(?:ed|ing)? the web/i.test(summary)) {
+    return running ? t.aiStepSearchingWeb : t.aiStepSearchedWeb;
+  }
+  if (tool === "build_legal_context") {
+    return t.aiStepBuildContext;
+  }
+  if (tool === "validate_citations") {
+    return t.aiStepValidateCitations;
+  }
+  if (tool === "retrieve_memory" || /memory/i.test(tool)) {
+    return t.matterContext;
+  }
+
   if (action.includes("conversation.resolve")) {
-    return step.summary?.trim() || "Understood conversation context";
+    return t.aiStepConversationContext;
   }
   if (action.includes("research.validate_evidence")) {
-    return step.summary?.trim() || "Validated evidence";
+    return t.aiStepValidateEvidence;
   }
   if (action.includes("research.retrieved_target")) {
-    return step.summary?.trim() || "Retrieved target provision";
+    return t.aiStepRetrievedTarget;
   }
   if (action.includes("research.target")) {
-    return step.summary?.trim() || "Identified research target";
+    return t.aiStepResearchTarget;
   }
-  if (tool === "search_web") {
-    return running ? "Searching the web…" : "search_web";
+  if (action.includes("research.retry")) {
+    return t.aiStepRetryRetrieval;
+  }
+
+  // Prefer localized labels over raw English server summaries.
+  if (
+    summary &&
+    (looksArabic(summary) ||
+      (locale === "fr" && !looksMostlyEnglish(summary)))
+  ) {
+    return summary;
   }
 
   if (
@@ -116,7 +187,7 @@ export function humanizeStep(
     tool.includes("draft") ||
     agent === "DRAFTING"
   ) {
-    return t.draftSomething;
+    return running ? t.aiStepDrafting : t.draftSomething;
   }
   if (
     action.includes("document") ||
@@ -130,6 +201,15 @@ export function humanizeStep(
   }
   if (action.includes("plan") || agent === "ORCHESTRATOR") {
     return running ? t.researching : t.statusThinking;
+  }
+
+  // In Arabic UI, never surface raw English tool chatter.
+  if (locale === "ar") {
+    return running ? t.workingOnRequest : t.statusWorking;
+  }
+
+  if (summary && !looksMostlyEnglish(summary)) {
+    return summary;
   }
   return running ? t.workingOnRequest : t.statusWorking;
 }
@@ -187,5 +267,16 @@ export function roleLabel(role: string, t: Messages) {
       return t.lawyer;
     default:
       return role;
+  }
+}
+
+export function approvalActionLabel(action: string, t: Messages) {
+  switch (action) {
+    case "create_draft":
+      return t.aiStepApprovalCreateDraft;
+    case "save_matter_memory":
+      return t.aiStepApprovalSaveMemory;
+    default:
+      return action.replaceAll("_", " ");
   }
 }

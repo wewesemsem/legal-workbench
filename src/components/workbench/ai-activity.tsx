@@ -60,6 +60,7 @@ function countFromResult(
 
 function researchTargetLabel(
   result: Record<string, unknown> | null | undefined,
+  t: Messages,
 ): string | null {
   if (!result) return null;
   const target =
@@ -85,14 +86,18 @@ function researchTargetLabel(
       )
     : [];
   if (document && articles.length === 1) {
-    return `${document} · Article ${articles[0]}`;
+    return `${document} · ${t.articleLabel} ${articles[0]}`;
   }
   if (document) return document;
-  if (articles.length === 1) return `Article ${articles[0]}`;
+  if (articles.length === 1) return `${t.articleLabel} ${articles[0]}`;
   return null;
 }
 
-function preferredProcessSummaries(steps: AiStep[]): string[] {
+function preferredProcessSummaries(
+  steps: AiStep[],
+  t: Messages,
+  locale: "en" | "fr" | "ar",
+): string[] {
   const preferredActions = new Set([
     "conversation.resolve",
     "research.target",
@@ -103,18 +108,19 @@ function preferredProcessSummaries(steps: AiStep[]): string[] {
   const preferredTools = new Set([
     "search_legal_corpus",
     "retrieve_legal_provision",
+    "create_draft",
   ]);
 
   return steps
     .filter((step) => {
       if (step.status === "FAILED") return false;
       if (preferredActions.has(step.action)) return true;
-      if (step.tool && preferredTools.has(step.tool) && step.summary) {
+      if (step.tool && preferredTools.has(step.tool)) {
         return true;
       }
       return false;
     })
-    .map((step) => step.summary?.trim())
+    .map((step) => humanizeStep(step, t, locale))
     .filter((summary): summary is string => Boolean(summary))
     .slice(0, 6);
 }
@@ -124,6 +130,7 @@ function buildCollapsedSummary(
   steps: AiStep[],
   result: Record<string, unknown> | null | undefined,
   t: Messages,
+  locale: "en" | "fr" | "ar",
 ) {
   if (status === "FAILED") {
     return t.researchFailed;
@@ -134,8 +141,8 @@ function buildCollapsedSummary(
       ? t.statusWaitingApproval
       : t.researchCompleted;
 
-  const targetLabel = researchTargetLabel(result);
-  const process = preferredProcessSummaries(steps);
+  const targetLabel = researchTargetLabel(result, t);
+  const process = preferredProcessSummaries(steps, t, locale);
   if (targetLabel) {
     return `${title} · ${targetLabel}`;
   }
@@ -218,7 +225,7 @@ export function AiActivity({
   result?: Record<string, unknown> | null;
   defaultExpanded?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const working = isWorkingStatus(status);
   const finished = isTerminalStatus(status);
   const autoExpand =
@@ -271,7 +278,13 @@ export function AiActivity({
           ]
         : [];
 
-  const collapsedLabel = buildCollapsedSummary(status, steps, result, t);
+  const collapsedLabel = buildCollapsedSummary(
+    status,
+    steps,
+    result,
+    t,
+    locale,
+  );
 
   if (!working && finished && !expanded) {
     return (
@@ -331,7 +344,7 @@ export function AiActivity({
           }}
         >
           {visibleSteps.map((step) => {
-            const label = humanizeStep(step, t);
+            const label = humanizeStep(step, t, locale);
             return (
               <li
                 key={`${step.sequence}-${step.action}-${step.tool ?? ""}`}

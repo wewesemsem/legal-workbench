@@ -4,6 +4,7 @@ import {
   type AgentRuntime,
 } from "@/modules/agents/agents/base";
 import { getAgentModelGateway } from "@/modules/agents/model-gateway";
+import { outputLanguageInstruction } from "@/modules/agents/prompts";
 import type {
   AgentContext,
   AgentDefinition,
@@ -130,7 +131,12 @@ export async function runAgentControlLoop(input: {
     }
 
     let decision = await gateway.chooseNextAction({
-      system: input.agent.systemInstructions,
+      system: [
+        input.agent.systemInstructions,
+        outputLanguageInstruction(
+          input.context.memory.resolvedInstructions.language,
+        ),
+      ].join("\n\n"),
       agentType: input.agent.id,
       task: input.task,
       allowedTools,

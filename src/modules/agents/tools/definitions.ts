@@ -6,6 +6,11 @@ import {
   listDocumentPages,
   listMatterDocuments,
 } from "@/modules/documents/service";
+import {
+  arabicDefaultDraftTitle,
+  isArabicOutputLanguage,
+  looksLatinOnly,
+} from "@/modules/agents/prompts";
 import type { AgentContext } from "@/modules/agents/types";
 import { buildLegalContext } from "@/modules/legal-retrieval/context-builder";
 import { runLegalResearch } from "@/modules/legal-retrieval/research";
@@ -502,9 +507,15 @@ export const draftTool: AgentToolDefinition = {
       citationIds: z.array(z.string()).max(50).default([]),
     })
     .strict(),
-  async execute(input) {
+  async execute(input, context) {
+    const language =
+      context.agentContext.memory.resolvedInstructions.language;
+    const title =
+      isArabicOutputLanguage(language) && looksLatinOnly(input.title)
+        ? arabicDefaultDraftTitle()
+        : input.title;
     return {
-      title: input.title,
+      title,
       draft_type: input.draftType,
       sections: input.sections,
       full_text: input.fullText,
