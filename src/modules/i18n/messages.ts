@@ -27,6 +27,12 @@ export type Messages = {
   openWorkspace: string;
   loginTitle: string;
   loginSubtitle: string;
+  authShowcaseTitle: string;
+  authShowcaseBody: string;
+  authShotOverview: string;
+  authShotAi: string;
+  authShotResearch: string;
+  authShotApproval: string;
   email: string;
   password: string;
   signingIn: string;
@@ -460,6 +466,13 @@ const en: Messages = {
   openWorkspace: "Open workspace",
   loginTitle: "Sign in",
   loginSubtitle: "Access your Legal Workbench account.",
+  authShowcaseTitle: "Your matters, research, and drafts in one workspace",
+  authShowcaseBody:
+    "Open a case, ask grounded questions, and review AI drafts before anything leaves your desk.",
+  authShotOverview: "Matter overview with case context and quick actions",
+  authShotAi: "Matter AI workspace with research progress and follow-ups",
+  authShotResearch: "Legal research answers with official-source citations",
+  authShotApproval: "Human approval dialog for an AI-prepared draft notice",
   email: "Email",
   password: "Password",
   signingIn: "Signing in…",
@@ -942,6 +955,14 @@ const fr: Messages = {
   openWorkspace: "Ouvrir l’espace",
   loginTitle: "Connexion",
   loginSubtitle: "Accédez à votre compte Legal Workbench.",
+  authShowcaseTitle:
+    "Dossiers, recherche et brouillons dans un même espace",
+  authShowcaseBody:
+    "Ouvrez une affaire, posez des questions ancrées, et validez les brouillons IA avant qu’ils ne quittent votre bureau.",
+  authShotOverview: "Vue d’ensemble du dossier avec contexte et actions rapides",
+  authShotAi: "Espace IA du dossier avec progression de recherche",
+  authShotResearch: "Réponses de recherche juridique avec citations officielles",
+  authShotApproval: "Dialogue d’approbation pour un projet de mise en demeure",
   email: "E-mail",
   password: "Mot de passe",
   signingIn: "Connexion…",
@@ -1431,6 +1452,13 @@ const ar: Messages = {
   openWorkspace: "فتح مساحة العمل",
   loginTitle: "تسجيل الدخول",
   loginSubtitle: "ادخل إلى حسابك في المنصة القانونية.",
+  authShowcaseTitle: "قضاياك وبحثك ومسوداتك في مساحة عمل واحدة",
+  authShowcaseBody:
+    "افتح قضية، واطرح أسئلة مبنية على مصادر موثوقة، وراجع مسودات الذكاء الاصطناعي قبل أن تغادر مكتبك.",
+  authShotOverview: "نظرة عامة على القضية مع السياق والإجراءات السريعة",
+  authShotAi: "مساحة ذكاء القضية الاصطناعي مع تقدم البحث",
+  authShotResearch: "إجابات البحث القانوني مع اقتباسات من مصادر رسمية",
+  authShotApproval: "حوار موافقة على مسودة إنذار أعدّها الذكاء الاصطناعي",
   email: "البريد الإلكتروني",
   password: "كلمة المرور",
   signingIn: "جارٍ تسجيل الدخول…",
