@@ -15,8 +15,11 @@ export function AuthShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <section className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-12 xl:px-16">
-        <div className="mx-auto w-full max-w-md">
+      <section className="flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-12 xl:px-16">
+        <div className="mx-auto w-full max-w-md space-y-6">
+          <div className="lg:hidden">
+            <WorkspaceScreenshots compact />
+          </div>
           <div className="rounded-xl border border-stone-200 bg-[var(--panel)] p-8 shadow-sm">
             {children}
           </div>
