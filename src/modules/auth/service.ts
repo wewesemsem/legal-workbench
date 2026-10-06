@@ -182,19 +182,28 @@ export async function registerUser(input: RegisterInput, request: Request) {
       throw conflict("An account with this email already exists");
     }
 
-    const user = toPublicUser(payload.user);
+    let user = toPublicUser(payload.user);
+    const requireVerification = getEnv().REQUIRE_EMAIL_VERIFICATION;
 
-    await issueEmailVerification({
-      userId: user.id,
-      email: user.email,
-      firstName: user.firstName,
-    });
+    if (requireVerification) {
+      await issueEmailVerification({
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+      });
+    } else {
+      await db
+        .update(userTable)
+        .set({ emailVerified: true, updatedAt: new Date() })
+        .where(eq(userTable.id, user.id));
+      user = { ...user, emailVerified: true };
+    }
 
     return {
       user,
       // No session cookies when autoSignIn is disabled.
       response: result,
-      verificationEmailSent: true as const,
+      verificationEmailSent: requireVerification,
     };
   } catch (error) {
     throw mapAuthError(error);
@@ -215,7 +224,11 @@ export async function loginUser(input: LoginInput, request: Request) {
       .where(eq(userTable.email, email))
       .limit(1);
 
-    if (existing[0] && !existing[0].emailVerified) {
+    if (
+      getEnv().REQUIRE_EMAIL_VERIFICATION &&
+      existing[0] &&
+      !existing[0].emailVerified
+    ) {
       throw forbidden(
         "Please verify your email before signing in. Check your inbox for a confirmation link.",
       );
@@ -248,7 +261,7 @@ export async function loginUser(input: LoginInput, request: Request) {
     };
 
     const user = toPublicUser(payload.user);
-    if (!user.emailVerified) {
+    if (getEnv().REQUIRE_EMAIL_VERIFICATION && !user.emailVerified) {
       throw forbidden(
         "Please verify your email before signing in. Check your inbox for a confirmation link.",
       );

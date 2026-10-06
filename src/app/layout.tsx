@@ -29,7 +29,7 @@ const notoArabic = Noto_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "Lawyer Workbench",
+  title: "Legal Workbench",
   description:
     "AI-native legal workbench for Middle East lawyers — starting with Egypt.",
 };

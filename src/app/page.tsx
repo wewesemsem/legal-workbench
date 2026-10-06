@@ -15,16 +15,10 @@ export default async function HomePage() {
       </h1>
       <p className="mt-4 max-w-xl text-lg text-stone-600">{t.landingBody}</p>
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link
-          href="/register"
-          className="rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-stone-800"
-        >
+        <Link href="/register" className="btn-primary">
           {t.createAccount}
         </Link>
-        <Link
-          href="/login"
-          className="rounded-md border border-stone-300 bg-white px-4 py-2.5 text-sm font-medium text-stone-800 hover:bg-stone-50"
-        >
+        <Link href="/login" className="btn-secondary">
           {t.signIn}
         </Link>
         <Link

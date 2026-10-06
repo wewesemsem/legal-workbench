@@ -15,8 +15,12 @@ const envSchema = z.object({
   AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900_000),
   AUTH_RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(10),
   EMAIL_PROVIDER: z.enum(["console", "resend"]).default("console"),
-  EMAIL_FROM: z.string().min(3).default("Lawyer Workbench <onboarding@localhost>"),
+  EMAIL_FROM: z.string().min(3).default("Legal Workbench <onboarding@localhost>"),
   RESEND_API_KEY: z.string().optional(),
+  REQUIRE_EMAIL_VERIFICATION: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
   EMAIL_VERIFICATION_EXPIRES_MS: z.coerce
     .number()
     .int()
@@ -59,10 +63,23 @@ const envSchema = z.object({
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
 
   // Chat + LLM
-  LLM_PROVIDER: z.enum(["mock", "openai"]).default("mock"),
+  // Default provider for agents / legal retrieval. Chat can override per request
+  // via the multi-LLM picker when multiple API keys are configured.
+  LLM_PROVIDER: z
+    .enum(["mock", "openai", "anthropic", "gemini"])
+    .default("mock"),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default("gpt-4o-mini"),
   OPENAI_BASE_URL: z.string().url().default("https://api.openai.com/v1"),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_MODEL: z.string().default("claude-sonnet-5-5"),
+  ANTHROPIC_BASE_URL: z.string().url().default("https://api.anthropic.com"),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default("gemini-3.8-flash"),
+  GEMINI_BASE_URL: z
+    .string()
+    .url()
+    .default("https://generativelanguage.googleapis.com/v1beta"),
   CHAT_RECENT_MESSAGE_LIMIT: z.coerce.number().int().positive().default(20),
   CHAT_MAX_MESSAGE_CHARS: z.coerce.number().int().positive().default(8_000),
   CHAT_RATE_LIMIT_WINDOW_MS: z.coerce
@@ -176,6 +193,7 @@ export function getEnv(): AppEnv {
     EMAIL_PROVIDER: process.env.EMAIL_PROVIDER,
     EMAIL_FROM: process.env.EMAIL_FROM,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    REQUIRE_EMAIL_VERIFICATION: process.env.REQUIRE_EMAIL_VERIFICATION,
     EMAIL_VERIFICATION_EXPIRES_MS: process.env.EMAIL_VERIFICATION_EXPIRES_MS,
     EMAIL_RESEND_RATE_LIMIT_WINDOW_MS:
       process.env.EMAIL_RESEND_RATE_LIMIT_WINDOW_MS,
@@ -199,6 +217,12 @@ export function getEnv(): AppEnv {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     OPENAI_MODEL: process.env.OPENAI_MODEL,
     OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL,
+    ANTHROPIC_BASE_URL: process.env.ANTHROPIC_BASE_URL,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    GEMINI_MODEL: process.env.GEMINI_MODEL,
+    GEMINI_BASE_URL: process.env.GEMINI_BASE_URL,
     CHAT_RECENT_MESSAGE_LIMIT: process.env.CHAT_RECENT_MESSAGE_LIMIT,
     CHAT_MAX_MESSAGE_CHARS: process.env.CHAT_MAX_MESSAGE_CHARS,
     CHAT_RATE_LIMIT_WINDOW_MS: process.env.CHAT_RATE_LIMIT_WINDOW_MS,
@@ -283,6 +307,21 @@ export function getEnv(): AppEnv {
   if (parsed.data.LLM_PROVIDER === "openai" && !parsed.data.OPENAI_API_KEY) {
     throw new Error(
       "Invalid environment configuration: OPENAI_API_KEY is required when LLM_PROVIDER=openai",
+    );
+  }
+
+  if (
+    parsed.data.LLM_PROVIDER === "anthropic" &&
+    !parsed.data.ANTHROPIC_API_KEY
+  ) {
+    throw new Error(
+      "Invalid environment configuration: ANTHROPIC_API_KEY is required when LLM_PROVIDER=anthropic",
+    );
+  }
+
+  if (parsed.data.LLM_PROVIDER === "gemini" && !parsed.data.GEMINI_API_KEY) {
+    throw new Error(
+      "Invalid environment configuration: GEMINI_API_KEY is required when LLM_PROVIDER=gemini",
     );
   }
 

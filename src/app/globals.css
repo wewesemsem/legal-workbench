@@ -107,6 +107,66 @@ html[data-theme="dark"] :where(.hover\:bg-white:hover) {
   background-color: var(--panel);
 }
 
+/*
+ * Solid CTAs use `bg-stone-900 text-white`. Stone-900 is remapped for readable
+ * *text* in night mode, which would wash out those buttons — pin them to accent.
+ */
+html[data-theme="dark"] :where(.bg-stone-900.text-white) {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] :where(.bg-stone-900.text-white:hover) {
+  background-color: color-mix(in srgb, var(--accent) 82%, #ffffff);
+}
+
+html[data-theme="dark"] :where(.bg-stone-900.text-white:disabled),
+html[data-theme="dark"] :where(.bg-stone-900.text-white[disabled]) {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
+  transition: filter 120ms ease, opacity 120ms ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  filter: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  border: 1px solid var(--stone-300);
+  background: var(--panel);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
+  transition: background-color 120ms ease;
+}
+
+.btn-secondary:hover {
+  background: var(--stone-100);
+}
+
 .auth-input {
   width: 100%;
   border-radius: 0.375rem;

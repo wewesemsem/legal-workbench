@@ -1,14 +1,16 @@
 import { getEnv } from "@/lib/env";
 import type { LlmChatResult, LlmService } from "@/modules/llm/types";
 
-export function createOpenAiLlmService(): LlmService {
+export function createOpenAiLlmService(defaultModel?: string): LlmService {
   const env = getEnv();
+  const fallbackModel = defaultModel || env.OPENAI_MODEL;
 
   return {
-    async chat({ messages, timeoutMs = 45_000 }) {
+    async chat({ messages, model, timeoutMs = 45_000 }) {
       const started = Date.now();
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const selectedModel = model?.trim() || fallbackModel;
 
       try {
         const response = await fetch(`${env.OPENAI_BASE_URL}/chat/completions`, {
@@ -18,15 +20,25 @@ export function createOpenAiLlmService(): LlmService {
             Authorization: `Bearer ${env.OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: env.OPENAI_MODEL,
+            model: selectedModel,
             messages,
-            temperature: 0.2,
           }),
           signal: controller.signal,
         });
 
         if (!response.ok) {
-          throw new Error(`OpenAI request failed with status ${response.status}`);
+          let detail = `OpenAI request failed with status ${response.status}`;
+          try {
+            const errBody = (await response.json()) as {
+              error?: { message?: string };
+            };
+            if (errBody.error?.message) {
+              detail = errBody.error.message;
+            }
+          } catch {
+            // keep status message
+          }
+          throw new Error(detail);
         }
 
         const payload = (await response.json()) as {
@@ -42,7 +54,7 @@ export function createOpenAiLlmService(): LlmService {
         const result: LlmChatResult = {
           content,
           provider: "openai",
-          model: payload.model || env.OPENAI_MODEL,
+          model: payload.model || selectedModel,
           latencyMs: Date.now() - started,
           metadata: {
             mode: "matter_context_only",

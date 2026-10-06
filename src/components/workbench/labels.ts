@@ -148,6 +148,14 @@ export function humanizeStep(
   }
 
   if (action.includes("conversation.resolve")) {
+    // Show the concrete resolve note when available ("Identified target: Article 1").
+    if (
+      summary &&
+      summary.trim() &&
+      summary.trim() !== "Understood conversation context"
+    ) {
+      return summary.trim();
+    }
     return t.aiStepConversationContext;
   }
   if (action.includes("research.validate_evidence")) {
@@ -180,7 +188,7 @@ export function humanizeStep(
     return running ? t.researching : t.researchAnIssue;
   }
   if (action.includes("review") || agent === "REVIEW") {
-    return t.reviewADocument;
+    return running ? t.statusThinking : t.aiStepReviewedFindings;
   }
   if (
     action.includes("draft") ||

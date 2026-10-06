@@ -1,4 +1,4 @@
-# Lawyer Workbench
+# Legal Workbench
 
 AI-native legal workbench for Middle East lawyers — starting with Egypt.
 
@@ -124,7 +124,7 @@ BRAVE_SEARCH_API_KEY=...
 
 EMAIL_PROVIDER=resend
 RESEND_API_KEY=re_...
-EMAIL_FROM=Lawyer Workbench <noreply@your-domain.com>
+EMAIL_FROM=Legal Workbench <noreply@your-domain.com>
 ```
 
 ### When you outgrow staging

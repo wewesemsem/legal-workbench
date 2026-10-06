@@ -33,6 +33,10 @@ import {
   extractReviewIssues,
 } from "@/components/workbench/review-panel";
 import { aiStatusLabel } from "@/components/workbench/labels";
+import {
+  LlmPicker,
+  type LlmPickerSelection,
+} from "@/components/llm/llm-picker";
 import { useI18n } from "@/modules/i18n/provider";
 
 type AgentConversationListItem = {
@@ -101,17 +105,22 @@ function nestedString(value: unknown, keys: string[]): string | null {
 
 function summaryFromResult(result: Record<string, unknown> | null | undefined) {
   if (!result) return null;
-  if (typeof result.summary === "string" && result.summary.trim()) {
-    return result.summary;
-  }
+  // Prefer primary work products over review meta for any message type.
+  const fromResearch = nestedString(result.research, ["answer", "summary"]);
+  if (fromResearch) return fromResearch;
   if (typeof result.answer === "string" && result.answer.trim()) {
     return result.answer;
+  }
+  const fromDocuments = nestedString(result.documents, ["summary", "analysis"]);
+  if (fromDocuments) return fromDocuments;
+  const fromDraft = nestedString(result.draft, ["full_text", "summary"]);
+  if (fromDraft) return fromDraft;
+  if (typeof result.summary === "string" && result.summary.trim()) {
+    return result.summary;
   }
   if (typeof result.analysis === "string" && result.analysis.trim()) {
     return result.analysis;
   }
-  const fromResearch = nestedString(result.research, ["answer", "summary"]);
-  if (fromResearch) return fromResearch;
   const fromReview = nestedString(result.review, ["summary"]);
   if (fromReview) return fromReview;
   const steps = result.steps;
@@ -409,6 +418,10 @@ export function AIWorkspace({
 
   const [task, setTask] = useState("");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
+  const [llmSelection, setLlmSelection] = useState<LlmPickerSelection>({
+    provider: "openai",
+    model: "latest",
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conversations, setConversations] = useState(initialConversations);
@@ -739,6 +752,8 @@ export function AIWorkspace({
           agent_type: "ORCHESTRATOR",
           conversation_id: conversationId,
           conversation_history: conversationHistory,
+          provider: llmSelection.provider,
+          model: llmSelection.model,
         }),
       });
       const data = (await response.json()) as RunResponse;
@@ -959,6 +974,9 @@ export function AIWorkspace({
               data-tour="ai-composer"
               className="sticky bottom-0 border-t border-stone-200 bg-[var(--panel)] px-5 py-4"
             >
+              <div className="mb-3">
+                <LlmPicker value={llmSelection} onChange={setLlmSelection} />
+              </div>
               <label className="sr-only" htmlFor="ai-composer">
                 {t.askAnything}
               </label>

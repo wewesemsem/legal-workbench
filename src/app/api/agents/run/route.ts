@@ -7,6 +7,7 @@ import { getAgentEnv } from "@/modules/agents/config";
 import { prepareAgentRun } from "@/modules/agents/service";
 import { requireAuthContext } from "@/modules/auth/service";
 import { rateLimited } from "@/modules/authorization/errors";
+import { runWithLlmSelection } from "@/modules/llm/request-selection";
 
 export const maxDuration = 300;
 
@@ -29,6 +30,8 @@ const bodySchema = z
       )
       .max(40)
       .optional(),
+    provider: z.enum(["openai", "anthropic", "gemini"]).optional(),
+    model: z.string().trim().min(1).max(120).optional(),
   })
   .strict();
 
@@ -72,6 +75,10 @@ export async function POST(request: Request) {
     }
 
     const body = bodySchema.parse(await request.json());
+    const llmSelection = {
+      provider: body.provider,
+      model: body.model,
+    };
     const prepared = await prepareAgentRun({
       matterId: body.matter_id,
       task: body.task,
@@ -85,14 +92,18 @@ export async function POST(request: Request) {
     // completed payload. In the app, return immediately so the UI can poll
     // live steps while execution continues via after().
     if (shouldWaitForCompletion()) {
-      const result = await prepared.execute();
+      const result = await runWithLlmSelection(llmSelection, () =>
+        prepared.execute(),
+      );
       return jsonCreated(serializeRunView(result));
     }
 
     after(() => {
-      void prepared.execute().catch(() => {
-        // Failure is persisted on the agent run; avoid unhandled rejection.
-      });
+      void runWithLlmSelection(llmSelection, () => prepared.execute()).catch(
+        () => {
+          // Failure is persisted on the agent run; avoid unhandled rejection.
+        },
+      );
     });
 
     return jsonCreated(serializeRunView(prepared.view));

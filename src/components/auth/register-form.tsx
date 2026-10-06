@@ -32,14 +32,18 @@ export function RegisterForm() {
 
     try {
       const email = String(form.get("email") ?? "");
-      await registerRequest({
+      const result = await registerRequest({
         email,
         password,
         firstName: String(form.get("firstName") ?? ""),
         lastName: String(form.get("lastName") ?? ""),
         role: String(form.get("role") ?? "LAWYER") as UserRole,
       });
-      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+      if (result.verificationEmailSent) {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+      } else {
+        router.push("/login");
+      }
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t.createAccount);
@@ -102,7 +106,7 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="btn-primary w-full"
       >
         {pending ? t.creatingAccount : t.createAccount}
       </button>

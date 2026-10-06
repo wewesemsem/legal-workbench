@@ -1,6 +1,7 @@
 import { getEnv } from "@/lib/env";
 import { getAgentModelGateway } from "@/modules/agents/model-gateway";
 import { validateExecutionPlan } from "@/modules/agents/plan-validator";
+import { resolveActiveLlmProvider } from "@/modules/llm/request-selection";
 import type {
   AgentPermissions,
   AgentType,
@@ -209,7 +210,7 @@ export async function createExecutionPlan(input: {
 }): Promise<ExecutionPlan> {
   const fallback = classifyWorkflow(input.task);
 
-  if (getEnv().LLM_PROVIDER === "mock") {
+  if (resolveActiveLlmProvider(getEnv().LLM_PROVIDER) === "mock") {
     // Mock mode: deterministic plan that still goes through the validator.
     const validated = validateExecutionPlan({
       proposed: { ...fallback, source: "deterministic" },
@@ -223,7 +224,7 @@ export async function createExecutionPlan(input: {
     const gateway = getAgentModelGateway();
     const proposed = await gateway.structuredOutput({
       system:
-        "You are a legal workbench orchestrator planner. Propose a structured multi-agent plan. Never execute tools. Never invent agents outside DOCUMENT, RESEARCH, REVIEW, DRAFTING. Prefer the smallest safe plan. Drafting always requiresApproval=true.",
+        "You are a legal workbench orchestrator planner. Propose a structured multi-agent plan. Never execute tools. Never invent agents outside DOCUMENT, RESEARCH, REVIEW, DRAFTING. Prefer the smallest safe plan that matches the user request. Use RESEARCH alone for legal questions. Add DOCUMENT only when the user asks about uploaded matter documents/contracts. Add DRAFTING only when the user asks to draft/write. Add REVIEW only to check a draft or document analysis — never after research-only work. Drafting always requiresApproval=true.",
       instructions:
         "Return ONLY JSON matching the schema. Do not include chain-of-thought.",
       task: input.task,
@@ -243,7 +244,7 @@ export async function createExecutionPlan(input: {
       maxSteps: input.maxSteps,
     });
     if (validated.ok) {
-      return validated.plan;
+      return simplifyExecutionPlan(validated.plan);
     }
 
     console.warn("[agents] AI plan rejected; using deterministic fallback", {
@@ -256,4 +257,34 @@ export async function createExecutionPlan(input: {
     });
     return fallback;
   }
+}
+
+/**
+ * Structural cleanup for any plan: REVIEW examines drafts/document work
+ * products, not bare research answers. Drop orphan REVIEW steps when the plan
+ * has no DOCUMENT/DRAFTING work product to review.
+ */
+export function simplifyExecutionPlan(plan: ExecutionPlan): ExecutionPlan {
+  const detailed = plan.detailedSteps ?? [];
+  const hasWorkProduct = detailed.some(
+    (step) => step.agent === "DOCUMENT" || step.agent === "DRAFTING",
+  );
+  const reviewOnlyWorkflow =
+    plan.workflow === "REVIEW" || plan.workflow === "CONTRACT_REVIEW";
+
+  if (hasWorkProduct || reviewOnlyWorkflow) {
+    return plan;
+  }
+
+  const detailedSteps = detailed.filter((step) => step.agent !== "REVIEW");
+  if (detailedSteps.length === detailed.length || !detailedSteps.length) {
+    return plan;
+  }
+
+  return {
+    ...plan,
+    detailedSteps,
+    steps: detailedSteps.map((step) => step.agent),
+    rationale: `${plan.rationale} (dropped orphan REVIEW — no draft/document work product).`,
+  };
 }

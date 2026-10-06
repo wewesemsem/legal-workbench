@@ -42,7 +42,11 @@ export async function registerRequest(input: RegisterInput) {
     );
   }
 
-  return data.user;
+  return {
+    user: data.user,
+    verificationEmailSent: Boolean(data.verificationEmailSent),
+    message: data.message,
+  };
 }
 
 export async function loginRequest(input: LoginInput) {

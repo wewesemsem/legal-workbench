@@ -25,7 +25,7 @@ function layout(title: string, bodyHtml: string, bodyText: string) {
             <tr>
               <td>
                 <p style="margin:0;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:#78716c;">
-                  Lawyer Workbench
+                  Legal Workbench
                 </p>
                 <h1 style="margin:12px 0 0;font-size:28px;line-height:1.2;color:#1c1917;">
                   ${title}
@@ -45,7 +45,7 @@ function layout(title: string, bodyHtml: string, bodyText: string) {
   </body>
 </html>`;
 
-  const text = `Lawyer Workbench\n\n${title}\n\n${bodyText}\n\nMiddle East Legal Workbench — starting with Egypt.\n`;
+  const text = `Legal Workbench\n\n${title}\n\n${bodyText}\n\nMiddle East Legal Workbench — starting with Egypt.\n`;
 
   return { html, text };
 }
@@ -55,7 +55,7 @@ export function buildVerificationEmail(input: VerificationEmailInput) {
   const bodyHtml = `
     <p style="margin:0 0 16px;">Hello ${escapeHtml(input.firstName)},</p>
     <p style="margin:0 0 16px;">
-      Thank you for creating your Lawyer Workbench account. Please confirm your
+      Thank you for creating your Legal Workbench account. Please confirm your
       email address to finish setup and keep your workspace secure.
     </p>
     <p style="margin:0 0 24px;">
@@ -76,7 +76,7 @@ export function buildVerificationEmail(input: VerificationEmailInput) {
   const bodyText = [
     `Hello ${input.firstName},`,
     "",
-    "Thank you for creating your Lawyer Workbench account. Confirm your email address to finish setup:",
+    "Thank you for creating your Legal Workbench account. Confirm your email address to finish setup:",
     input.verifyUrl,
     "",
     "This link expires soon and can be used once. If you did not create an account, ignore this message.",
@@ -86,7 +86,7 @@ export function buildVerificationEmail(input: VerificationEmailInput) {
 
   const { html, text } = layout("Confirm your email", bodyHtml, bodyText);
   return {
-    subject: "Confirm your Lawyer Workbench email",
+    subject: "Confirm your Legal Workbench email",
     html,
     text,
   };
@@ -97,13 +97,13 @@ export function buildWelcomeEmail(input: WelcomeEmailInput) {
   const bodyHtml = `
     <p style="margin:0 0 16px;">Welcome, ${escapeHtml(input.firstName)}.</p>
     <p style="margin:0 0 16px;">
-      Your email is verified and your Lawyer Workbench account is ready. You can
+      Your email is verified and your Legal Workbench account is ready. You can
       sign in and begin building your secure legal workspace.
     </p>
     <p style="margin:0 0 24px;">
       <a href="${escapeHtml(`${env.NEXT_PUBLIC_APP_URL}/login`)}"
          style="display:inline-block;background:#1c1917;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-family:Arial,sans-serif;font-size:14px;">
-        Sign in to Lawyer Workbench
+        Sign in to Legal Workbench
       </a>
     </p>
     <p style="margin:0;font-size:14px;color:#78716c;">
@@ -114,15 +114,15 @@ export function buildWelcomeEmail(input: WelcomeEmailInput) {
   const bodyText = [
     `Welcome, ${input.firstName}.`,
     "",
-    "Your email is verified and your Lawyer Workbench account is ready.",
+    "Your email is verified and your Legal Workbench account is ready.",
     `Sign in: ${env.NEXT_PUBLIC_APP_URL}/login`,
     "",
     "Coming next: workspaces, matters, documents, and grounded legal research.",
   ].join("\n");
 
-  const { html, text } = layout("Welcome to Lawyer Workbench", bodyHtml, bodyText);
+  const { html, text } = layout("Welcome to Legal Workbench", bodyHtml, bodyText);
   return {
-    subject: "Welcome to Lawyer Workbench",
+    subject: "Welcome to Legal Workbench",
     html,
     text,
   };

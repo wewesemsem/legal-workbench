@@ -45,7 +45,7 @@ describe("email verification", () => {
       }),
     );
     expect(register.status).toBe(201);
-    expect(findConsoleEmail(email, "Confirm your Lawyer Workbench")).toBeTruthy();
+    expect(findConsoleEmail(email, "Confirm your Legal Workbench")).toBeTruthy();
 
     const blockedLogin = await loginPost(
       new Request("http://localhost/api/auth/login", {
@@ -69,7 +69,7 @@ describe("email verification", () => {
     expect(verify.status).toBe(307);
     expect(verify.headers.get("location")).toContain("/verified?status=success");
 
-    expect(findConsoleEmail(email, "Welcome to Lawyer Workbench")).toBeTruthy();
+    expect(findConsoleEmail(email, "Welcome to Legal Workbench")).toBeTruthy();
     expect(
       getConsoleSentEmails().every(
         (message) => !message.text.includes(STRONG_PASSWORD),

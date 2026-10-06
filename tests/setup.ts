@@ -35,6 +35,8 @@ env.WEB_SEARCH_PROVIDER = "mock";
 env.LLM_PROVIDER = "mock";
 env.LEGAL_EMBEDDING_PROVIDER = "mock";
 env.DOCUMENT_AI_PROVIDER = "mock";
+// Keep verification flows covered even when local/staging turn the gate off.
+env.REQUIRE_EMAIL_VERIFICATION = "true";
 
 // Drop any prior cached client from a previous vitest run in this process.
 const globalForDb = globalThis as { pgClient?: unknown };

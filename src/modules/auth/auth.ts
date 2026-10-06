@@ -9,7 +9,7 @@ import { getEnv } from "@/lib/env";
 const env = getEnv();
 
 export const auth = betterAuth({
-  appName: "Lawyer Workbench",
+  appName: "Legal Workbench",
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {

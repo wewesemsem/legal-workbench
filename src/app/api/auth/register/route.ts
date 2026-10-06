@@ -17,8 +17,9 @@ export async function POST(request: Request) {
     return jsonCreated({
       user,
       verificationEmailSent,
-      message:
-        "Account created. Please check your email to confirm your address before signing in.",
+      message: verificationEmailSent
+        ? "Account created. Please check your email to confirm your address before signing in."
+        : "Account created. You can sign in now.",
     });
   } catch (error) {
     logAuthEvent("register_failed", {

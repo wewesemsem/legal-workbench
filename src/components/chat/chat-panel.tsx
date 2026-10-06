@@ -3,6 +3,11 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  LlmPicker,
+  type LlmPickerSelection,
+} from "@/components/llm/llm-picker";
+
 type Conversation = {
   id: string;
   title: string;
@@ -45,6 +50,10 @@ export function ChatPanel({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [llmSelection, setLlmSelection] = useState<LlmPickerSelection>({
+    provider: "openai",
+    model: "latest",
+  });
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = useMemo(
@@ -111,7 +120,11 @@ export function ChatPanel({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ content: trimmed }),
+        body: JSON.stringify({
+          content: trimmed,
+          provider: llmSelection.provider,
+          model: llmSelection.model,
+        }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -257,6 +270,9 @@ export function ChatPanel({
               {error}
             </p>
           ) : null}
+          <div className="mb-3">
+            <LlmPicker value={llmSelection} onChange={setLlmSelection} />
+          </div>
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-stone-700">Message</span>
             <textarea

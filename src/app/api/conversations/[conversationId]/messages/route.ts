@@ -37,12 +37,16 @@ export async function POST(
     const bodySchema = z.object({
       content: z.string().trim().min(1).max(env.CHAT_MAX_MESSAGE_CHARS),
       explicitUserContext: z.array(z.string().trim().max(4_000)).max(5).optional(),
+      provider: z.enum(["openai", "anthropic", "gemini"]).optional(),
+      model: z.string().trim().min(1).max(120).optional(),
     });
     const body = bodySchema.parse(await request.json());
     const result = await sendConversationMessage({
       conversationId,
       content: body.content,
       explicitUserContext: body.explicitUserContext,
+      provider: body.provider,
+      model: body.model,
       context: auth,
       clientKey: getClientIp(request.headers),
     });

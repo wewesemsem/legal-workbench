@@ -396,6 +396,7 @@ export type Messages = {
   aiStepBuildContext: string;
   aiStepValidateCitations: string;
   aiStepConversationContext: string;
+  aiStepReviewedFindings: string;
   aiStepValidateEvidence: string;
   aiStepRetrievedTarget: string;
   aiStepResearchTarget: string;
@@ -432,7 +433,7 @@ export type Messages = {
 };
 
 const en: Messages = {
-  brand: "Lawyer Workbench",
+  brand: "Legal Workbench",
   brandTagline: "AI legal workspace",
   language: "Language",
   theme: "Theme",
@@ -451,14 +452,14 @@ const en: Messages = {
   signingOut: "Signing out…",
   commandPalette: "Command palette",
   landingEyebrow: "Middle East Legal Workbench",
-  landingTitle: "Lawyer Workbench",
+  landingTitle: "Legal Workbench",
   landingBody:
     "A secure AI-native workspace for lawyers across the Middle East — starting with Egypt.",
   createAccount: "Create account",
   signIn: "Sign in",
   openWorkspace: "Open workspace",
   loginTitle: "Sign in",
-  loginSubtitle: "Access your Lawyer Workbench account.",
+  loginSubtitle: "Access your Legal Workbench account.",
   email: "Email",
   password: "Password",
   signingIn: "Signing in…",
@@ -864,6 +865,7 @@ const en: Messages = {
   aiStepBuildContext: "Built legal context",
   aiStepValidateCitations: "Validated citations",
   aiStepConversationContext: "Understood conversation context",
+  aiStepReviewedFindings: "Reviewed findings",
   aiStepValidateEvidence: "Validated evidence",
   aiStepRetrievedTarget: "Retrieved target provision",
   aiStepResearchTarget: "Identified research target",
@@ -873,7 +875,7 @@ const en: Messages = {
   tourNext: "Next",
   tourDone: "Done",
   tourProgress: "Step {current} of {total}",
-  tourWelcomeTitle: "Welcome to Lawyer Workbench",
+  tourWelcomeTitle: "Welcome to Legal Workbench",
   tourWelcomeBody:
     "A quick walkthrough of the workspace — navigation, matters, and where AI helps. Takes about a minute.",
   tourSidebarTitle: "Your navigation",
@@ -913,7 +915,7 @@ const en: Messages = {
 
 const fr: Messages = {
   ...en,
-  brand: "Lawyer Workbench",
+  brand: "Legal Workbench",
   brandTagline: "Espace juridique IA",
   language: "Langue",
   theme: "Thème",
@@ -932,14 +934,14 @@ const fr: Messages = {
   signingOut: "Déconnexion…",
   commandPalette: "Palette de commandes",
   landingEyebrow: "Espace juridique Moyen-Orient",
-  landingTitle: "Lawyer Workbench",
+  landingTitle: "Legal Workbench",
   landingBody:
     "Un espace sécurisé et natif IA pour les avocats du Moyen-Orient — en commençant par l’Égypte.",
   createAccount: "Créer un compte",
   signIn: "Se connecter",
   openWorkspace: "Ouvrir l’espace",
   loginTitle: "Connexion",
-  loginSubtitle: "Accédez à votre compte Lawyer Workbench.",
+  loginSubtitle: "Accédez à votre compte Legal Workbench.",
   email: "E-mail",
   password: "Mot de passe",
   signingIn: "Connexion…",
@@ -1352,6 +1354,7 @@ const fr: Messages = {
   aiStepBuildContext: "Contexte juridique préparé",
   aiStepValidateCitations: "Citations validées",
   aiStepConversationContext: "Contexte de conversation compris",
+  aiStepReviewedFindings: "Conclusions examinées",
   aiStepValidateEvidence: "Preuves validées",
   aiStepRetrievedTarget: "Disposition cible récupérée",
   aiStepResearchTarget: "Cible de recherche identifiée",
@@ -1361,7 +1364,7 @@ const fr: Messages = {
   tourNext: "Suivant",
   tourDone: "Terminé",
   tourProgress: "Étape {current} sur {total}",
-  tourWelcomeTitle: "Bienvenue dans Lawyer Workbench",
+  tourWelcomeTitle: "Bienvenue dans Legal Workbench",
   tourWelcomeBody:
     "Un court parcours de l’espace de travail — navigation, dossiers et IA. Environ une minute.",
   tourSidebarTitle: "Votre navigation",
@@ -1401,7 +1404,7 @@ const fr: Messages = {
 
 const ar: Messages = {
   ...en,
-  brand: "منصة المحامي",
+  brand: "المنصة القانونية",
   brandTagline: "مساحة عمل قانونية بالذكاء الاصطناعي",
   language: "اللغة",
   theme: "المظهر",
@@ -1420,14 +1423,14 @@ const ar: Messages = {
   signingOut: "جارٍ تسجيل الخروج…",
   commandPalette: "لوحة الأوامر",
   landingEyebrow: "منصة قانونية للشرق الأوسط",
-  landingTitle: "منصة المحامي",
+  landingTitle: "المنصة القانونية",
   landingBody:
     "مساحة عمل آمنة ومدعومة بالذكاء الاصطناعي للمحامين في الشرق الأوسط — بدءًا من مصر.",
   createAccount: "إنشاء حساب",
   signIn: "تسجيل الدخول",
   openWorkspace: "فتح مساحة العمل",
   loginTitle: "تسجيل الدخول",
-  loginSubtitle: "ادخل إلى حسابك في منصة المحامي.",
+  loginSubtitle: "ادخل إلى حسابك في المنصة القانونية.",
   email: "البريد الإلكتروني",
   password: "كلمة المرور",
   signingIn: "جارٍ تسجيل الدخول…",
@@ -1827,6 +1830,7 @@ const ar: Messages = {
   aiStepBuildContext: "تم بناء السياق القانوني",
   aiStepValidateCitations: "تم التحقق من الاستشهادات",
   aiStepConversationContext: "تم فهم سياق المحادثة",
+  aiStepReviewedFindings: "تمت مراجعة النتائج",
   aiStepValidateEvidence: "تم التحقق من الأدلة",
   aiStepRetrievedTarget: "تم استرجاع الحكم المستهدف",
   aiStepResearchTarget: "تم تحديد هدف البحث",
@@ -1836,7 +1840,7 @@ const ar: Messages = {
   tourNext: "التالي",
   tourDone: "تم",
   tourProgress: "الخطوة {current} من {total}",
-  tourWelcomeTitle: "مرحبًا بك في منصة المحامي",
+  tourWelcomeTitle: "مرحبًا بك في المنصة القانونية",
   tourWelcomeBody:
     "جولة سريعة في مساحة العمل — التنقل والقضايا وأين يساعد الذكاء الاصطناعي. تستغرق حوالي دقيقة.",
   tourSidebarTitle: "قائمة التنقل",

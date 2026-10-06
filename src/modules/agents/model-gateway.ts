@@ -1,5 +1,9 @@
 import { getEnv } from "@/lib/env";
-import { getLlmService, type LlmChatMessage } from "@/modules/llm";
+import {
+  chatWithLlmSelection,
+  type LlmChatMessage,
+} from "@/modules/llm";
+import { getRequestLlmSelection } from "@/modules/llm/request-selection";
 import type { AgentToolDecision, AgentType } from "@/modules/agents/types";
 import { simulateMockToolDecision } from "@/modules/agents/mock-simulator";
 import { detectLegalReferences } from "@/modules/legal-retrieval/references";
@@ -214,10 +218,29 @@ export function parseToolDecision(
   };
 }
 
+function isMockLlmActive() {
+  const selection = getRequestLlmSelection();
+  const provider = selection.provider || getEnv().LLM_PROVIDER;
+  return provider === "mock";
+}
+
+async function chatForAgents(input: {
+  messages: LlmChatMessage[];
+  timeoutMs?: number;
+}) {
+  const selection = getRequestLlmSelection();
+  return chatWithLlmSelection({
+    messages: input.messages,
+    provider: selection.provider,
+    model: selection.model,
+    timeoutMs: input.timeoutMs,
+  });
+}
+
 export function createAgentModelGateway(): AgentModelGateway {
   return {
     async generate({ messages, timeoutMs }) {
-      const result = await getLlmService().chat({ messages, timeoutMs });
+      const result = await chatForAgents({ messages, timeoutMs });
       return {
         content: result.content,
         provider: result.provider,
@@ -226,17 +249,17 @@ export function createAgentModelGateway(): AgentModelGateway {
     },
 
     async structuredOutput(input) {
-      if (getEnv().LLM_PROVIDER === "mock") {
+      if (isMockLlmActive()) {
         return null;
       }
-      const result = await getLlmService().chat({
+      const result = await chatForAgents({
         messages: buildStructuredMessages(input),
       });
       return extractJsonObject(result.content);
     },
 
     async chooseNextAction(input) {
-      if (getEnv().LLM_PROVIDER === "mock") {
+      if (isMockLlmActive()) {
         return simulateMockToolDecision(input);
       }
 
@@ -251,7 +274,7 @@ export function createAgentModelGateway(): AgentModelGateway {
   "incomplete": false
 }`;
 
-      const result = await getLlmService().chat({
+      const result = await chatForAgents({
         messages: [
           { role: "system", content: input.system },
           {

@@ -617,16 +617,43 @@ export class OrchestratorService {
       (input.agentContext.priorResults.REVIEW as Record<string, unknown> | null) ??
       null;
     const researchAnswer =
-      research && typeof research.answer === "string"
-        ? research.answer
-        : research && typeof research.summary === "string"
-          ? research.summary
+      research && typeof research.answer === "string" && research.answer.trim()
+        ? research.answer.trim()
+        : research && typeof research.summary === "string" && research.summary.trim()
+          ? research.summary.trim()
           : null;
+    const documentSummary = (() => {
+      const documents = input.agentContext.priorResults.DOCUMENT;
+      if (!documents || typeof documents !== "object") return null;
+      const row = documents as Record<string, unknown>;
+      if (typeof row.summary === "string" && row.summary.trim()) {
+        return row.summary.trim();
+      }
+      if (typeof row.analysis === "string" && row.analysis.trim()) {
+        return row.analysis.trim();
+      }
+      return null;
+    })();
+    const draftSummary = (() => {
+      const draft = input.agentContext.priorResults.DRAFTING;
+      if (!draft || typeof draft !== "object") return null;
+      const row = draft as Record<string, unknown>;
+      if (typeof row.full_text === "string" && row.full_text.trim()) {
+        return row.full_text.trim();
+      }
+      if (typeof row.summary === "string" && row.summary.trim()) {
+        return row.summary.trim();
+      }
+      return null;
+    })();
     const reviewSummary =
-      review && typeof review.summary === "string" ? review.summary : null;
+      review && typeof review.summary === "string" ? review.summary.trim() : null;
     const stepSummary =
       stepResults.find((result) => result.summary.trim())?.summary ?? null;
-    const primarySummary = researchAnswer ?? reviewSummary ?? stepSummary;
+    // Prefer the primary work product for any task shape: research answer,
+    // document analysis, or draft text. Review meta-summaries come last.
+    const primarySummary =
+      researchAnswer ?? documentSummary ?? draftSummary ?? reviewSummary ?? stepSummary;
 
     const finalResult = {
       workflow: plan.workflow,

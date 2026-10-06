@@ -13,7 +13,7 @@ import {
   assertMatterAccess,
   type AuthContext,
 } from "@/modules/authorization/permissions";
-import { getLlmService } from "@/modules/llm";
+import { chatWithLlmSelection } from "@/modules/llm";
 import {
   buildMatterContext,
   matterContextToLlmMessages,
@@ -213,6 +213,8 @@ export async function sendConversationMessage(input: {
   conversationId: string;
   content: string;
   explicitUserContext?: string[];
+  provider?: string;
+  model?: string;
   context: AuthContext;
   clientKey?: string;
 }) {
@@ -310,8 +312,11 @@ export async function sendConversationMessage(input: {
   let assistantMetadata: Record<string, unknown>;
 
   try {
-    const llm = getLlmService();
-    const result = await llm.chat({ messages: llmMessages });
+    const result = await chatWithLlmSelection({
+      messages: llmMessages,
+      provider: input.provider,
+      model: input.model,
+    });
     assistantContent = result.content;
     assistantMetadata = {
       model: result.model,

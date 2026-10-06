@@ -6,6 +6,7 @@ import { CommandPaletteHint } from "@/components/workbench/command-palette-hint"
 import { CommandPaletteHost } from "@/components/workbench/command-palette-host";
 import { WorkbenchTourHost } from "@/components/workbench/workbench-tour";
 import { WorkflowDemoGuideHost } from "@/components/workbench/workflow-demo-guide";
+import { getEnv } from "@/lib/env";
 import { getSessionUser, requireAuthContext } from "@/modules/auth/service";
 import { listWorkbenchMatters } from "@/modules/workbench/queries";
 
@@ -22,7 +23,7 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  if (!user.emailVerified) {
+  if (getEnv().REQUIRE_EMAIL_VERIFICATION && !user.emailVerified) {
     redirect(`/verify-email?email=${encodeURIComponent(user.email)}`);
   }
 

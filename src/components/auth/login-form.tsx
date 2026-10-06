@@ -68,7 +68,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="btn-primary w-full"
       >
         {pending ? t.signingIn : t.signIn}
       </button>

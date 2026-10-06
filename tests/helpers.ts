@@ -88,7 +88,7 @@ export function collectCookies(response: Response): string {
 }
 
 export function extractVerificationTokenFromEmail(emailAddress: string) {
-  const message = findConsoleEmail(emailAddress, "Confirm your Lawyer Workbench");
+  const message = findConsoleEmail(emailAddress, "Confirm your Legal Workbench");
   if (!message) {
     throw new Error("Verification email not found in console provider");
   }

@@ -53,7 +53,7 @@ The product is divided into six major layers. Phase 1 implements foundations und
 
 ## Layer responsibilities
 
-### 1. Lawyer Workbench
+### 1. Legal Workbench
 
 User-facing product surface: chat, research, documents, drafting, cases/matters, clients, settings.
 

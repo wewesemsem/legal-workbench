@@ -16,7 +16,7 @@ export function ThemeToggle({
     <button
       type="button"
       onClick={toggleNightMode}
-      className="inline-flex items-center gap-2 rounded-md border border-stone-300 bg-white px-2.5 py-1.5 text-sm text-stone-800 outline-none hover:bg-stone-50 focus-visible:ring-2 focus-visible:ring-stone-400"
+      className="inline-flex items-center gap-2 rounded-md border border-stone-300 bg-[var(--panel)] px-2.5 py-1.5 text-sm text-stone-800 outline-none hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-stone-400"
       aria-pressed={isDark}
       aria-label={isDark ? t.themeSwitchToLight : t.themeSwitchToDark}
       title={isDark ? t.themeSwitchToLight : t.themeSwitchToDark}

@@ -1,6 +1,8 @@
 import type { AgentRuntime, LegalAgent } from "@/modules/agents/agents/base";
 import { runAgentControlLoop } from "@/modules/agents/agents/control-loop";
 import { getAgentModelGateway } from "@/modules/agents/model-gateway";
+import { getEnv } from "@/lib/env";
+import { resolveActiveLlmProvider } from "@/modules/llm/request-selection";
 import {
   DRAFTING_AGENT_INSTRUCTIONS,
   SHARED_AGENT_SYSTEM,
@@ -17,7 +19,6 @@ import type {
   ResearchAgentOutput,
   ReviewAgentOutput,
 } from "@/modules/agents/types";
-import { getEnv } from "@/lib/env";
 
 const DEFINITION: AgentDefinition = {
   id: "DRAFTING",
@@ -201,7 +202,7 @@ async function maybeGenerateWithGateway(input: {
   priorText: string;
   language?: string | null;
 }): Promise<DraftingAgentOutput> {
-  if (getEnv().LLM_PROVIDER === "mock") {
+  if (resolveActiveLlmProvider(getEnv().LLM_PROVIDER) === "mock") {
     return input.fallback;
   }
 

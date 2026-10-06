@@ -17,7 +17,7 @@ async function main() {
     }),
   );
 
-  const message = findConsoleEmail(email, "Confirm your Lawyer Workbench");
+  const message = findConsoleEmail(email, "Confirm your Legal Workbench");
   const link = message?.text.match(/https?:\/\/\S+/)?.[0];
 
   if (!link) {

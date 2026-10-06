@@ -111,7 +111,7 @@ function preferredProcessSummaries(
     "create_draft",
   ]);
 
-  return steps
+  const labels = steps
     .filter((step) => {
       if (step.status === "FAILED") return false;
       if (preferredActions.has(step.action)) return true;
@@ -121,8 +121,16 @@ function preferredProcessSummaries(
       return false;
     })
     .map((step) => humanizeStep(step, t, locale))
-    .filter((summary): summary is string => Boolean(summary))
-    .slice(0, 6);
+    .filter((summary): summary is string => Boolean(summary));
+
+  // Drop consecutive duplicates (e.g. repeated "Understood conversation context").
+  const deduped: string[] = [];
+  for (const label of labels) {
+    if (deduped[deduped.length - 1] !== label) {
+      deduped.push(label);
+    }
+  }
+  return deduped.slice(0, 6);
 }
 
 function buildCollapsedSummary(
