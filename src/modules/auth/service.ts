@@ -92,6 +92,47 @@ function mapAuthError(error: unknown): AppError {
     if (/already exists|unique|duplicate/i.test(error.message)) {
       return conflict("An account with this email already exists");
     }
+
+    const causeMessage =
+      error.cause instanceof Error ? error.cause.message : undefined;
+    const detail = [error.message, causeMessage].filter(Boolean).join(" | ");
+
+    // Surface infrastructure failures distinctly so operators can diagnose
+    // production auth outages (missing tables, DB connectivity, etc.).
+    console.error("[auth] unexpected auth backend error", {
+      name: error.name,
+      message: error.message,
+      cause: causeMessage,
+    });
+
+    if (
+      /ECONNREFUSED|ENOTFOUND|ECONNRESET|connection|timeout|connect/i.test(
+        detail,
+      )
+    ) {
+      return new AppError(
+        "VALIDATION_ERROR",
+        "Authentication service is temporarily unavailable",
+        503,
+      );
+    }
+
+    if (
+      /relation .* does not exist|undefined table|no such table|Failed query/i.test(
+        detail,
+      )
+    ) {
+      return new AppError(
+        "VALIDATION_ERROR",
+        "Authentication service is not initialized",
+        503,
+      );
+    }
+  } else {
+    console.error("[auth] unexpected auth backend error", {
+      name: "unknown",
+      message: "non-error throw",
+    });
   }
 
   return new AppError("VALIDATION_ERROR", "Authentication request failed", 400);

@@ -6,9 +6,9 @@ builder = "NIXPACKS"
 buildCommand = "npm run build"
 
 [deploy]
-startCommand = "npm start"
+# package.json `start` already runs db:migrate before next start.
 preDeployCommand = ["npm run db:migrate"]
-healthcheckPath = "/login"
-healthcheckTimeout = 30
+healthcheckPath = "/api/health"
+healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
